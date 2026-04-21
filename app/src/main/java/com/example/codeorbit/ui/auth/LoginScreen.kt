@@ -29,8 +29,12 @@ import com.example.codeorbit.ui.splash.PrimaryBlue
 @Composable
 fun LoginScreen(
     onNavigateToRegister: () -> Unit,
-    onNavigateToHome: () -> Unit,
-    viewModel: AuthViewModel = viewModel()
+    onNavigateToHome: (Int, String) -> Unit,
+    viewModel: AuthViewModel = viewModel(
+        factory = AuthViewModelFactory(
+            androidx.compose.ui.platform.LocalContext.current.applicationContext as android.app.Application
+        )
+    )
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -40,7 +44,7 @@ fun LoginScreen(
 
     LaunchedEffect(uiState.isSuccess) {
         if (uiState.isSuccess) {
-            onNavigateToHome()
+            onNavigateToHome(uiState.userId, uiState.username)
         }
     }
 

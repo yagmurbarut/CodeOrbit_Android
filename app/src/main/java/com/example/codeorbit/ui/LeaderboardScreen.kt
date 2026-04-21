@@ -14,32 +14,35 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.codeorbit.network.RetrofitClient
 import com.example.codeorbit.ui.splash.BackgroundDark
 import com.example.codeorbit.ui.splash.PrimaryBlue
 
 @Composable
 fun LeaderboardScreen(
-    onNavigateBack: () -> Unit = {}
+    userId: Int = 0,
+    onNavigateBack: () -> Unit = {},
+    viewModel: UserViewModel = viewModel(
+        factory = UserViewModelFactory(
+            androidx.compose.ui.platform.LocalContext.current.applicationContext as android.app.Application
+        )
+    )
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
-    val tabs = listOf("Global", "Weekly", "Streak")
+    val tabs = listOf("Global", "Weekly")
+    val uiState by viewModel.uiState.collectAsState()
 
-    val topThree = listOf(
-        Triple("Sarah J.", "2,840 XP", 2),
-        Triple("Alex Chen", "3,150 XP", 1),
-        Triple("Marco R.", "2,610 XP", 3)
-    )
+    val effectiveUserId = if (userId == 0) RetrofitClient.userId else userId
+    LaunchedEffect(effectiveUserId) {
+        if (effectiveUserId > 0) viewModel.loadLeaderboard(effectiveUserId)
+    }
 
-    val otherUsers = listOf(
-        Pair("Zoe Dev", "2,450 XP"),
-        Pair("Liam Smith", "2,390 XP"),
-        Pair("Elena K.", "2,210 XP")
-    )
+    val activeList = if (selectedTab == 0) uiState.globalLeaderboard else uiState.weeklyLeaderboard
 
     Box(
         modifier = Modifier
@@ -66,10 +69,7 @@ fun LeaderboardScreen(
                     Icon(Icons.Filled.ArrowBack, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
                 }
                 Text("Leaderboard", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                Box(
-                    modifier = Modifier.size(40.dp),
-                    contentAlignment = Alignment.Center
-                ) {
+                Box(modifier = Modifier.size(40.dp), contentAlignment = Alignment.Center) {
                     Icon(Icons.Filled.Share, contentDescription = null, tint = PrimaryBlue, modifier = Modifier.size(20.dp))
                 }
             }
@@ -78,8 +78,7 @@ fun LeaderboardScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(0.dp)
+                    .padding(horizontal = 16.dp)
             ) {
                 tabs.forEachIndexed { index, tab ->
                     Box(
@@ -110,176 +109,155 @@ fun LeaderboardScreen(
 
             HorizontalDivider(color = SlateBorder)
 
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(bottom = 24.dp)
-            ) {
-                // Top 3 podium
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(
-                            Brush.verticalGradient(
-                                colors = listOf(PrimaryBlue.copy(alpha = 0.1f), Color.Transparent)
-                            )
-                        )
-                        .padding(horizontal = 16.dp, vertical = 24.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceEvenly,
-                        verticalAlignment = Alignment.Bottom
-                    ) {
-                        // 2. sıra
-                        PodiumItem(
-                            name = topThree[0].first,
-                            xp = topThree[0].second,
-                            rank = 2,
-                            size = 64.dp,
-                            podiumHeight = 64.dp,
-                            borderColor = Color(0xFF94A3B8),
-                            rankBgColor = Color(0xFF94A3B8)
-                        )
-                        // 1. sıra
-                        PodiumItem(
-                            name = topThree[1].first,
-                            xp = topThree[1].second,
-                            rank = 1,
-                            size = 80.dp,
-                            podiumHeight = 96.dp,
-                            borderColor = Color(0xFFEAB308),
-                            rankBgColor = Color(0xFFEAB308),
-                            showCrown = true,
-                            xpColor = PrimaryBlue
-                        )
-                        // 3. sıra
-                        PodiumItem(
-                            name = topThree[2].first,
-                            xp = topThree[2].second,
-                            rank = 3,
-                            size = 64.dp,
-                            podiumHeight = 48.dp,
-                            borderColor = Color(0xFF92400E),
-                            rankBgColor = Color(0xFF92400E)
-                        )
-                    }
+            if (uiState.isLoading) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = PrimaryBlue)
                 }
-
-                // Diğer kullanıcılar
+            } else if (activeList.isEmpty()) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("Henüz sıralama yok", fontSize = 14.sp, color = SlateText)
+                }
+            } else {
                 Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 16.dp, vertical = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    otherUsers.forEachIndexed { index, (name, xp) ->
+                    // Podium — sadece 3+ kullanıcı varsa göster
+                    if (activeList.size >= 3) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(
+                                    androidx.compose.ui.graphics.Brush.verticalGradient(
+                                        colors = listOf(PrimaryBlue.copy(alpha = 0.1f), Color.Transparent)
+                                    )
+                                )
+                                .padding(horizontal = 16.dp, vertical = 24.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceEvenly,
+                                verticalAlignment = Alignment.Bottom
+                            ) {
+                                PodiumItem(
+                                    name = activeList[1].username,
+                                    xp = "${activeList[1].score} Quiz",
+                                    rank = 2,
+                                    size = 64.dp,
+                                    podiumHeight = 64.dp,
+                                    borderColor = Color(0xFF94A3B8),
+                                    rankBgColor = Color(0xFF94A3B8)
+                                )
+                                PodiumItem(
+                                    name = activeList[0].username,
+                                    xp = "${activeList[0].score} Quiz",
+                                    rank = 1,
+                                    size = 80.dp,
+                                    podiumHeight = 96.dp,
+                                    borderColor = Color(0xFFEAB308),
+                                    rankBgColor = Color(0xFFEAB308),
+                                    showCrown = true,
+                                    xpColor = PrimaryBlue
+                                )
+                                PodiumItem(
+                                    name = activeList[2].username,
+                                    xp = "${activeList[2].score} Quiz",
+                                    rank = 3,
+                                    size = 64.dp,
+                                    podiumHeight = 48.dp,
+                                    borderColor = Color(0xFF92400E),
+                                    rankBgColor = Color(0xFF92400E)
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+
+                    // Tüm liste
+                    activeList.forEach { entry ->
+                        val isMe = entry.userId == effectiveUserId
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(SlateBackground)
+                                .background(
+                                    if (isMe) PrimaryBlue.copy(alpha = 0.15f)
+                                    else SlateBackground
+                                )
                                 .padding(12.dp),
                             horizontalArrangement = Arrangement.spacedBy(12.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
+                            // Sıra numarası
                             Text(
-                                "${index + 4}",
+                                "${entry.rank}",
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = SlateText,
-                                modifier = Modifier.width(24.dp)
+                                color = when (entry.rank) {
+                                    1 -> Color(0xFFEAB308)
+                                    2 -> Color(0xFF94A3B8)
+                                    3 -> Color(0xFF92400E)
+                                    else -> if (isMe) PrimaryBlue else SlateText
+                                },
+                                modifier = Modifier.width(28.dp)
                             )
+                            // Avatar
                             Box(
                                 modifier = Modifier
-                                    .size(40.dp)
+                                    .size(44.dp)
                                     .clip(CircleShape)
-                                    .background(PrimaryBlue.copy(alpha = 0.3f)),
+                                    .background(
+                                        if (isMe) PrimaryBlue.copy(alpha = 0.4f)
+                                        else PrimaryBlue.copy(alpha = 0.2f)
+                                    ),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    name.first().toString(),
-                                    fontSize = 16.sp,
+                                    entry.username.firstOrNull()?.toString()?.uppercase() ?: "?",
+                                    fontSize = 18.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = Color.White
                                 )
                             }
+                            // İsim ve skor
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(name, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                                Text(xp, fontSize = 12.sp, color = SlateText)
-                            }
-                            Icon(
-                                if (index == 1) Icons.Filled.Remove else if (index == 2) Icons.Filled.TrendingDown else Icons.Filled.TrendingUp,
-                                contentDescription = null,
-                                tint = if (index == 1) SlateText else if (index == 2) Color.Red else SuccessGreen,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                    }
-
-                    // Nokta nokta ayraç
-                    Box(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .width(4.dp)
-                                .height(32.dp)
-                                .clip(RoundedCornerShape(2.dp))
-                                .background(SlateBorder)
-                        )
-                    }
-
-                    // Kullanıcının kendi sırası
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(PrimaryBlue.copy(alpha = 0.15f))
-                            .then(
-                                Modifier.padding(16.dp)
-                            ),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            "42",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Black,
-                            color = PrimaryBlue,
-                            modifier = Modifier.width(24.dp)
-                        )
-                        Box(
-                            modifier = Modifier
-                                .size(48.dp)
-                                .clip(CircleShape)
-                                .background(PrimaryBlue.copy(alpha = 0.3f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text("Y", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                        }
-                        Column(modifier = Modifier.weight(1f)) {
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text("Sen (CoderX)", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                                Box(
-                                    modifier = Modifier
-                                        .clip(RoundedCornerShape(4.dp))
-                                        .background(PrimaryBlue)
-                                        .padding(horizontal = 6.dp, vertical = 2.dp)
-                                ) {
-                                    Text("PRO", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                Text(
+                                    if (isMe) "${entry.username} (Sen)" else entry.username,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
+                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    Text(
+                                        "${entry.score} Quiz",
+                                        fontSize = 12.sp,
+                                        color = SlateText
+                                    )
+                                    Text(
+                                        "${"%.0f".format(entry.successRate)}% başarı",
+                                        fontSize = 12.sp,
+                                        color = SuccessGreen
+                                    )
                                 }
                             }
-                            Text("845 XP · Sen #42 sıradasın", fontSize = 12.sp, color = SlateText)
-                        }
-                        Column(horizontalAlignment = Alignment.End) {
-                            Text("+12", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = PrimaryBlue)
-                            Icon(Icons.Filled.TrendingUp, contentDescription = null, tint = PrimaryBlue, modifier = Modifier.size(16.dp))
+                            // Streak
+                            if (entry.currentStreak > 0) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(2.dp)
+                                ) {
+                                    Text("🔥", fontSize = 14.sp)
+                                    Text(
+                                        "${entry.currentStreak}",
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFFF97316)
+                                    )
+                                }
+                            }
                         }
                     }
                 }
@@ -320,7 +298,7 @@ fun PodiumItem(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    name.first().toString(),
+                    name.firstOrNull()?.toString() ?: "?",
                     fontSize = if (rank == 1) 28.sp else 22.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White
@@ -343,19 +321,21 @@ fun PodiumItem(
         }
 
         Spacer(modifier = Modifier.height(8.dp))
-        Text(name.split(" ").first(), fontSize = if (rank == 1) 14.sp else 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
+        Text(
+            name.split(" ").first(),
+            fontSize = if (rank == 1) 14.sp else 12.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.White
+        )
         Text(xp, fontSize = 11.sp, color = xpColor)
-
         Spacer(modifier = Modifier.height(8.dp))
-
         Box(
             modifier = Modifier
                 .width(if (rank == 1) 80.dp else 64.dp)
                 .height(podiumHeight)
                 .clip(RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp))
                 .background(
-                    if (rank == 1) PrimaryBlue.copy(alpha = 0.3f)
-                    else SlateBackground
+                    if (rank == 1) PrimaryBlue.copy(alpha = 0.3f) else SlateBackground
                 )
         )
     }

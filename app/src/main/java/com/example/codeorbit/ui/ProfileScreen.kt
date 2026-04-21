@@ -19,19 +19,35 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.codeorbit.network.RetrofitClient
 import com.example.codeorbit.ui.splash.BackgroundDark
 import com.example.codeorbit.ui.splash.PrimaryBlue
 
 @Composable
 fun ProfileScreen(
-    username: String = "Alex Chen",
-    joinDate: String = "Joined Feb 2026",
+    userId: Int = 0,
+    username: String = "",
     onNavigateBack: () -> Unit = {},
-    onLogout: () -> Unit = {}
+    onLogout: () -> Unit = {},
+    onNavigateToFavorites: () -> Unit = {},
+    viewModel: UserViewModel = viewModel(
+        factory = UserViewModelFactory(
+            androidx.compose.ui.platform.LocalContext.current.applicationContext as android.app.Application
+        )
+    )
 ) {
+    val uiState by viewModel.uiState.collectAsState()
+    val stats = uiState.statistics
+
     var darkMode by remember { mutableStateOf(true) }
     var pushNotifications by remember { mutableStateOf(true) }
     var leaderboardUpdates by remember { mutableStateOf(false) }
+
+    val effectiveUserId = if (userId == 0) RetrofitClient.userId else userId
+    LaunchedEffect(effectiveUserId) {
+        if (effectiveUserId > 0) viewModel.loadStatistics(effectiveUserId)
+    }
 
     Box(
         modifier = Modifier
@@ -83,7 +99,7 @@ fun ProfileScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            username.first().toString(),
+                            username.firstOrNull()?.toString() ?: "?",
                             fontSize = 48.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.White
@@ -101,8 +117,13 @@ fun ProfileScreen(
                 }
 
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(username, fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                    Text(joinDate, fontSize = 13.sp, color = SlateText)
+                    Text(
+                        username.ifEmpty { "Kullanıcı" },
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                    Text("CodeOrbit üyesi", fontSize = 13.sp, color = SlateText)
                 }
             }
 
@@ -113,14 +134,13 @@ fun ProfileScreen(
                     .padding(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                StatCard(modifier = Modifier.weight(1f), value = "1,240", label = "XP")
-                StatCard(modifier = Modifier.weight(1f), value = "42", label = "Quizzes")
-                StatCard(modifier = Modifier.weight(1f), value = "#15", label = "Rank")
+                StatCard(modifier = Modifier.weight(1f), value = "${stats?.totalCorrectAnswers ?: 0}", label = "CORRECT")
+                StatCard(modifier = Modifier.weight(1f), value = "${stats?.totalQuizzes ?: 0}", label = "QUIZZES")
+                StatCard(modifier = Modifier.weight(1f), value = "${stats?.currentStreak ?: 0}🔥", label = "STREAK")
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Account Settings
             Column(
                 modifier = Modifier.padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(24.dp)
@@ -140,6 +160,13 @@ fun ProfileScreen(
                             .clip(RoundedCornerShape(16.dp))
                             .background(SlateBackground)
                     ) {
+                        SettingsItem(
+                            icon = Icons.Filled.Star,
+                            label = "Favorilerim",
+                            showArrow = true,
+                            onClick = onNavigateToFavorites
+                        )
+                        HorizontalDivider(color = SlateBorder, modifier = Modifier.padding(horizontal = 16.dp))
                         SettingsItem(
                             icon = Icons.Filled.Lock,
                             label = "Change Password",

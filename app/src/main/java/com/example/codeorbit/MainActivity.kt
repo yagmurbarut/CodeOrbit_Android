@@ -1,22 +1,18 @@
 package com.example.codeorbit
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.*
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.codeorbit.ui.AchievementsScreen
-import com.example.codeorbit.ui.ActiveQuizScreen
-import com.example.codeorbit.ui.FriendsScreen
-import com.example.codeorbit.ui.HomeScreen
-import com.example.codeorbit.ui.LeaderboardScreen
-import com.example.codeorbit.ui.ProfileScreen
-import com.example.codeorbit.ui.QuizResultScreen
-import com.example.codeorbit.ui.QuizSetupScreen
-import com.example.codeorbit.ui.StatisticsScreen
+import com.example.codeorbit.network.RetrofitClient
+import com.example.codeorbit.ui.*
 import com.example.codeorbit.ui.auth.LoginScreen
 import com.example.codeorbit.ui.auth.RegisterScreen
 import com.example.codeorbit.ui.splash.SplashScreen
@@ -29,10 +25,57 @@ class MainActivity : ComponentActivity() {
         setContent {
             CodeOrbitTheme(darkTheme = true) {
                 val navController = rememberNavController()
+                val context = LocalContext.current
+                val prefs = context.getSharedPreferences("codeorbit_prefs", Context.MODE_PRIVATE)
+
+                val savedToken = prefs.getString("token", "") ?: ""
+                var savedUserId = prefs.getInt("userId", 0)
+
+                if (savedUserId == 0 && savedToken.isNotEmpty()) {
+                    savedUserId = try {
+                        val parts = savedToken.split(".")
+                        val payload = parts[1]
+                        val decoded = android.util.Base64.decode(
+                            payload.padEnd((payload.length + 3) / 4 * 4, '='),
+                            android.util.Base64.URL_SAFE or android.util.Base64.NO_WRAP
+                        )
+                        val json = String(decoded)
+                        val key = "claims/nameidentifier\":"
+                        val start = json.indexOf(key) + key.length + 1
+                        val end = json.indexOf("\"", start)
+                        val parsedId = json.substring(start, end).toInt()
+                        prefs.edit().putInt("userId", parsedId).apply()
+                        parsedId
+                    } catch (e: Exception) { 0 }
+                }
+
+                android.util.Log.d("MainDebug", "savedUserId=$savedUserId")
+
+                if (savedToken.isNotEmpty()) {
+                    RetrofitClient.authToken = savedToken
+                    RetrofitClient.userId = savedUserId
+                }
+
+                var userId by remember { mutableStateOf(savedUserId) }
+                var username by remember { mutableStateOf(prefs.getString("username", "") ?: "") }
+
+                val startDestination = if (savedToken.isEmpty()) "splash" else "home"
+
+                val quizViewModel: QuizViewModel = viewModel(
+                    factory = QuizViewModelFactory(
+                        context.applicationContext as android.app.Application
+                    )
+                )
+
+                val userViewModel: UserViewModel = viewModel(
+                    factory = UserViewModelFactory(
+                        context.applicationContext as android.app.Application
+                    )
+                )
 
                 NavHost(
                     navController = navController,
-                    startDestination = "splash"
+                    startDestination = startDestination
                 ) {
                     composable("splash") {
                         SplashScreen(
@@ -48,7 +91,11 @@ class MainActivity : ComponentActivity() {
                             onNavigateToRegister = {
                                 navController.navigate("register")
                             },
-                            onNavigateToHome = {
+                            onNavigateToHome = { newUserId, newUsername ->
+                                userId = newUserId
+                                username = newUsername
+                                RetrofitClient.userId = newUserId
+                                userViewModel.clearData()
                                 navController.navigate("home") {
                                     popUpTo("login") { inclusive = true }
                                 }
@@ -60,7 +107,11 @@ class MainActivity : ComponentActivity() {
                             onNavigateToLogin = {
                                 navController.popBackStack()
                             },
-                            onNavigateToHome = {
+                            onNavigateToHome = { newUserId, newUsername ->
+                                userId = newUserId
+                                username = newUsername
+                                RetrofitClient.userId = newUserId
+                                userViewModel.clearData()
                                 navController.navigate("home") {
                                     popUpTo("register") { inclusive = true }
                                 }
@@ -69,60 +120,60 @@ class MainActivity : ComponentActivity() {
                     }
                     composable("home") {
                         HomeScreen(
-                            onNavigateToQuiz = {
-                                navController.navigate("quiz_setup")
-                            },
-                            onNavigateToStats = {
-                                navController.navigate("statistics")
-                            },
-                            onNavigateToLeaderboard = {
-                                navController.navigate("leaderboard")
-                            },
-                            onNavigateToFriends = {
-                                navController.navigate("friends")
-                            },
-                            onNavigateToProfile = {
-                                navController.navigate("profile")
-                            },
-                            onNavigateToAchievements = {
-                                navController.navigate("achievements")
-                            }
+                            userId = userId,
+                            username = username,
+                            onNavigateToQuiz = { navController.navigate("quiz_setup") },
+                            onNavigateToStats = { navController.navigate("statistics") },
+                            onNavigateToLeaderboard = { navController.navigate("leaderboard") },
+                            onNavigateToFriends = { navController.navigate("friends") },
+                            onNavigateToProfile = { navController.navigate("profile") },
+                            onNavigateToAchievements = { navController.navigate("achievements") },
+                            onNavigateToChallenge = { navController.navigate("daily_challenge") }
                         )
                     }
                     composable("quiz_setup") {
                         QuizSetupScreen(
-                            onNavigateBack = {
-                                navController.popBackStack()
+                            userId = userId,
+                            onNavigateBack = { navController.popBackStack() },
+                            onStartQuiz = { quizId ->
+                                navController.navigate("active_quiz/$quizId")
                             },
-                            onStartQuiz = { _, _, _, _ ->
-                                navController.navigate("active_quiz")
-                            }
+                            viewModel = quizViewModel
                         )
                     }
-                    composable("active_quiz") {
+                    composable("active_quiz/{quizId}") { backStackEntry ->
+                        val quizId = backStackEntry.arguments?.getString("quizId")?.toIntOrNull() ?: 0
                         ActiveQuizScreen(
-                            onQuizFinished = { correct ->
-                                navController.navigate("quiz_result/$correct/2") {
-                                    popUpTo("active_quiz") { inclusive = true }
+                            quizId = quizId,
+                            userId = userId,
+                            onQuizFinished = { correct, total ->
+                                val categoryName = quizViewModel.uiState.value.categoryName
+                                navController.navigate("quiz_result/$correct/$total/$categoryName") {
+                                    popUpTo("active_quiz/$quizId") { inclusive = true }
                                 }
                             },
-                            onNavigateBack = {
-                                navController.popBackStack()
-                            }
+                            onNavigateBack = { navController.popBackStack() },
+                            viewModel = quizViewModel
                         )
                     }
-                    composable("quiz_result/{correct}/{total}") { backStackEntry ->
+                    composable("quiz_result/{correct}/{total}/{categoryName}") { backStackEntry ->
                         val correct = backStackEntry.arguments?.getString("correct")?.toIntOrNull() ?: 0
                         val total = backStackEntry.arguments?.getString("total")?.toIntOrNull() ?: 0
+                        val categoryName = backStackEntry.arguments?.getString("categoryName") ?: ""
+                        val quizUiState by quizViewModel.uiState.collectAsState()
                         QuizResultScreen(
                             correctAnswers = correct,
                             totalQuestions = total,
+                            categoryName = categoryName,
+                            newBadges = quizUiState.newBadges,
                             onNewQuiz = {
+                                quizViewModel.resetQuiz()
                                 navController.navigate("quiz_setup") {
                                     popUpTo("home") { inclusive = false }
                                 }
                             },
                             onBackHome = {
+                                quizViewModel.resetQuiz()
                                 navController.navigate("home") {
                                     popUpTo("home") { inclusive = true }
                                 }
@@ -131,42 +182,70 @@ class MainActivity : ComponentActivity() {
                     }
                     composable("statistics") {
                         StatisticsScreen(
-                            onNavigateBack = {
-                                navController.popBackStack()
-                            }
+                            userId = userId,
+                            onNavigateBack = { navController.popBackStack() },
+                            viewModel = userViewModel
                         )
                     }
                     composable("leaderboard") {
                         LeaderboardScreen(
-                            onNavigateBack = {
-                                navController.popBackStack()
-                            }
+                            userId = userId,
+                            onNavigateBack = { navController.popBackStack() },
+                            viewModel = userViewModel
                         )
                     }
                     composable("profile") {
                         ProfileScreen(
-                            onNavigateBack = {
-                                navController.popBackStack()
-                            },
+                            userId = userId,
+                            username = username,
+                            onNavigateBack = { navController.popBackStack() },
+                            onNavigateToFavorites = { navController.navigate("favorites") },
                             onLogout = {
-                                navController.navigate("login") {
-                                    popUpTo("home") { inclusive = true }
+                                prefs.edit().clear().apply()
+                                RetrofitClient.authToken = ""
+                                RetrofitClient.userId = 0
+                                userViewModel.clearData()
+                                val intent = android.content.Intent(context, MainActivity::class.java).apply {
+                                    flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or
+                                            android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
                                 }
-                            }
+                                context.startActivity(intent)
+                            },
+                            viewModel = userViewModel
+                        )
+                    }
+                    composable("favorites") {
+                        FavoritesScreen(
+                            userId = userId,
+                            onNavigateBack = { navController.popBackStack() },
+                            viewModel = userViewModel
                         )
                     }
                     composable("friends") {
                         FriendsScreen(
-                            onNavigateBack = {
-                                navController.popBackStack()
-                            }
+                            userId = userId,
+                            onNavigateBack = { navController.popBackStack() },
+                            viewModel = userViewModel
                         )
                     }
                     composable("achievements") {
                         AchievementsScreen(
-                            onNavigateBack = {
-                                navController.popBackStack()
-                            }
+                            userId = userId,
+                            onNavigateBack = { navController.popBackStack() },
+                            viewModel = userViewModel
+                        )
+                    }
+                    composable("daily_challenge") {
+                        DailyChallengeScreen(
+                            userId = userId,
+                            onNavigateBack = { navController.popBackStack() }
+                        )
+                    }
+                    composable("favorites") {
+                        FavoritesScreen(
+                            userId = userId,
+                            onNavigateBack = { navController.popBackStack() },
+                            viewModel = userViewModel
                         )
                     }
                 }

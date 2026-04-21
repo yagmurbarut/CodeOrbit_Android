@@ -1,5 +1,6 @@
 package com.example.codeorbit.ui
 
+import android.app.Application
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -20,6 +21,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.codeorbit.network.RetrofitClient
 import com.example.codeorbit.ui.splash.BackgroundDark
 import com.example.codeorbit.ui.splash.PrimaryBlue
 
@@ -29,15 +33,28 @@ val SlateText = Color(0xFF94A3B8)
 
 @Composable
 fun HomeScreen(
+    userId: Int = 0,
     username: String = "Alex Chen",
     onNavigateToQuiz: () -> Unit = {},
     onNavigateToStats: () -> Unit = {},
     onNavigateToLeaderboard: () -> Unit = {},
     onNavigateToFriends: () -> Unit = {},
     onNavigateToProfile: () -> Unit = {},
-    onNavigateToAchievements: () -> Unit = {}
+    onNavigateToAchievements: () -> Unit = {},
+    onNavigateToChallenge: () -> Unit = {},
+    viewModel: HomeViewModel = viewModel(
+        factory = HomeViewModel.HomeViewModelFactory(
+            LocalContext.current.applicationContext as Application
+        )
+    )
 ) {
     val scrollState = rememberScrollState()
+    val uiState by viewModel.uiState.collectAsState()
+
+    val effectiveUserId = if (userId == 0) RetrofitClient.userId else userId
+    LaunchedEffect(effectiveUserId) {
+        if (effectiveUserId > 0) viewModel.loadHomeData(effectiveUserId)
+    }
 
     Box(
         modifier = Modifier
@@ -68,7 +85,7 @@ fun HomeScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = username.first().toString(),
+                            text = username.firstOrNull()?.toString() ?: "?",
                             color = Color.White,
                             fontWeight = FontWeight.Bold,
                             fontSize = 16.sp
@@ -104,6 +121,14 @@ fun HomeScreen(
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
+                StoriesRow(
+                    userId = userId,
+                    onNavigate = { route ->
+                        when (route) {
+                            "daily_challenge" -> onNavigateToChallenge()
+                        }
+                    }
+                )
                 // Streak Card
                 Box(
                     modifier = Modifier
@@ -130,11 +155,22 @@ fun HomeScreen(
                                 letterSpacing = 1.sp
                             )
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Text("15 Days!", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                Text(
+                                    "${uiState.streakDays} Days!",
+                                    fontSize = 28.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
                                 Text("🔥", fontSize = 24.sp)
                             }
                             Text(
-                                "You're in the top 5% this week!",
+                                when {
+                                    uiState.streakDays == 0 -> "Bugün bir quiz çöz, seriyi başlat! 🚀"
+                                    uiState.streakDays < 3 -> "İyi başlangıç, devam et! 💪"
+                                    uiState.streakDays < 7 -> "Harika gidiyorsun! 🔥"
+                                    uiState.streakDays < 30 -> "Muhteşem seri! Vazgeçme! ⚡"
+                                    else -> "Efsane! ${uiState.streakDays} günlük seri! 👑"
+                                },
                                 fontSize = 13.sp,
                                 color = Color.White.copy(alpha = 0.7f),
                                 modifier = Modifier.padding(top = 4.dp)
@@ -178,7 +214,14 @@ fun HomeScreen(
                             }
                             Column {
                                 Text("Daily Challenge", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                                Text("Master 'Recursion in JavaScript'", fontSize = 13.sp, color = SlateText)
+                                Text(
+                                    if (uiState.dailyChallengeTitle.isNotEmpty())
+                                        uiState.dailyChallengeTitle
+                                    else
+                                        "Yükleniyor...",
+                                    fontSize = 13.sp,
+                                    color = SlateText
+                                )
                             }
                         }
                         Box(
@@ -187,11 +230,16 @@ fun HomeScreen(
                                 .background(Color(0xFF78350F).copy(alpha = 0.3f))
                                 .padding(horizontal = 8.dp, vertical = 4.dp)
                         ) {
-                            Text("+50 XP", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFBBF24))
+                            Text(
+                                if (uiState.dailyChallengeXp > 0) "+${uiState.dailyChallengeXp} XP" else "+XP",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFFFBBF24)
+                            )
                         }
                     }
                     Button(
-                        onClick = onNavigateToQuiz,
+                            onClick = onNavigateToChallenge,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(48.dp),
@@ -265,23 +313,39 @@ fun HomeScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text("RECENT ACTIVITY", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = SlateText, letterSpacing = 2.sp)
-                        TextButton(onClick = {}) {
+                        TextButton(onClick = onNavigateToStats) {
                             Text("View All", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = PrimaryBlue)
                         }
                     }
 
-                    ActivityItem(
-                        title = "C# Fundamentals",
-                        subtitle = "Completed 2h ago",
-                        score = "92%",
-                        emoji = "💙"
-                    )
-                    ActivityItem(
-                        title = "Python Data Structures",
-                        subtitle = "Completed yesterday",
-                        score = "85%",
-                        emoji = "🐍"
-                    )
+                    if (uiState.isLoading) {
+                        Box(
+                            modifier = Modifier.fillMaxWidth().padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(color = PrimaryBlue, modifier = Modifier.size(24.dp))
+                        }
+                    } else if (uiState.recentActivities.isEmpty()) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(SlateBackground)
+                                .padding(20.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("Henüz quiz tamamlanmadı", fontSize = 13.sp, color = SlateText)
+                        }
+                    } else {
+                        uiState.recentActivities.forEach { activity ->
+                            ActivityItem(
+                                title = activity.title,
+                                subtitle = activity.completedAt,
+                                score = "%${activity.score}",
+                                emoji = "💻"
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -292,6 +356,7 @@ fun HomeScreen(
             onHome = {},
             onQuiz = onNavigateToQuiz,
             onAchievements = onNavigateToAchievements,
+            onLeaderboard = onNavigateToLeaderboard,
             onProfile = onNavigateToProfile
         )
     }
@@ -376,6 +441,7 @@ fun BottomNavBar(
     onHome: () -> Unit,
     onQuiz: () -> Unit,
     onAchievements: () -> Unit,
+    onLeaderboard: () -> Unit,
     onProfile: () -> Unit
 ) {
     Box(
@@ -402,7 +468,7 @@ fun BottomNavBar(
             ) {
                 Icon(Icons.Filled.Bolt, contentDescription = null, tint = Color.White, modifier = Modifier.size(28.dp))
             }
-            BottomNavItem(icon = Icons.Filled.EmojiEvents, label = "Arena", selected = false, onClick = {})
+            BottomNavItem(icon = Icons.Filled.EmojiEvents, label = "Arena", selected = false, onClick = onLeaderboard)
             BottomNavItem(icon = Icons.Filled.Person, label = "Profile", selected = false, onClick = onProfile)
         }
     }

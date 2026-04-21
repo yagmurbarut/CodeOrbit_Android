@@ -16,27 +16,33 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.codeorbit.network.RetrofitClient
 import com.example.codeorbit.ui.splash.BackgroundDark
 import com.example.codeorbit.ui.splash.PrimaryBlue
 
 @Composable
 fun AchievementsScreen(
-    onNavigateBack: () -> Unit = {}
+    userId: Int = 0,
+    onNavigateBack: () -> Unit = {},
+    viewModel: UserViewModel = viewModel(
+        factory = UserViewModelFactory(
+            androidx.compose.ui.platform.LocalContext.current.applicationContext as android.app.Application
+        )
+    )
 ) {
+    val uiState by viewModel.uiState.collectAsState()
     var selectedTab by remember { mutableIntStateOf(0) }
 
-    val earnedBadges = listOf(
-        Triple("Python Pro", Icons.Filled.Terminal, listOf(Color(0xFF60A5FA), Color(0xFF4F46E5))),
-        Triple("Fast Learner", Icons.Filled.Bolt, listOf(Color(0xFFFBBF24), Color(0xFFEA580C))),
-        Triple("Winner", Icons.Filled.EmojiEvents, listOf(Color(0xFF34D399), Color(0xFF0D9488)))
-    )
+    val effectiveUserId = if (userId == 0) RetrofitClient.userId else userId
+    LaunchedEffect(effectiveUserId) {
+        if (effectiveUserId > 0) viewModel.loadBadges(effectiveUserId)
+    }
 
     val lockedBadges = listOf(
         Triple("Bug Hunter", 0.7f, "7/10 quizzes"),
@@ -70,10 +76,7 @@ fun AchievementsScreen(
                     Icon(Icons.Filled.ArrowBack, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
                 }
                 Text("Achievements", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                Box(
-                    modifier = Modifier.size(40.dp),
-                    contentAlignment = Alignment.Center
-                ) {
+                Box(modifier = Modifier.size(40.dp), contentAlignment = Alignment.Center) {
                     Icon(Icons.Filled.Info, contentDescription = null, tint = PrimaryBlue, modifier = Modifier.size(20.dp))
                 }
             }
@@ -134,7 +137,12 @@ fun AchievementsScreen(
                             .padding(16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text("12", fontSize = 32.sp, fontWeight = FontWeight.Bold, color = PrimaryBlue)
+                        Text(
+                            "${uiState.badges.size}",
+                            fontSize = 32.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = PrimaryBlue
+                        )
                         Text("BADGES EARNED", fontSize = 10.sp, color = SlateText, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
                     }
                     Column(
@@ -145,8 +153,13 @@ fun AchievementsScreen(
                             .padding(16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text("850", fontSize = 32.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFBBF24))
-                        Text("TOTAL XP", fontSize = 10.sp, color = SlateText, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                        Text(
+                            "${uiState.statistics?.totalCorrectAnswers ?: 0}",
+                            fontSize = 32.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFFBBF24)
+                        )
+                        Text("CORRECT ANSWERS", fontSize = 10.sp, color = SlateText, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
                     }
                 }
 
@@ -168,39 +181,53 @@ fun AchievementsScreen(
                         }
                     }
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        earnedBadges.forEach { (name, icon, colors) ->
-                            Column(
-                                modifier = Modifier.weight(1f),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(80.dp)
-                                        .clip(CircleShape)
-                                        .background(
-                                            Brush.linearGradient(colors = colors)
-                                        ),
-                                    contentAlignment = Alignment.Center
+                    if (uiState.badges.isEmpty()) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(SlateBackground)
+                                .padding(20.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("Henüz rozet kazanılmadı", fontSize = 13.sp, color = SlateText)
+                        }
+                    } else {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            uiState.badges.take(3).forEach { badge ->
+                                Column(
+                                    modifier = Modifier.weight(1f),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
-                                    Icon(
-                                        icon,
-                                        contentDescription = null,
-                                        tint = Color.White,
-                                        modifier = Modifier.size(36.dp)
+                                    Box(
+                                        modifier = Modifier
+                                            .size(80.dp)
+                                            .clip(CircleShape)
+                                            .background(PrimaryBlue.copy(alpha = 0.3f)),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            Icons.Filled.EmojiEvents,
+                                            contentDescription = null,
+                                            tint = Color.White,
+                                            modifier = Modifier.size(36.dp)
+                                        )
+                                    }
+                                    Text(
+                                        badge.name,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.White,
+                                        textAlign = TextAlign.Center
                                     )
                                 }
-                                Text(
-                                    name,
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White,
-                                    textAlign = TextAlign.Center
-                                )
+                            }
+                            repeat(3 - uiState.badges.take(3).size) {
+                                Spacer(modifier = Modifier.weight(1f))
                             }
                         }
                     }
@@ -224,7 +251,6 @@ fun AchievementsScreen(
                         }
                     }
 
-                    // 2x2 grid
                     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         lockedBadges.chunked(2).forEach { row ->
                             Row(
@@ -247,40 +273,19 @@ fun AchievementsScreen(
                                                 .border(2.dp, SlateBorder, CircleShape),
                                             contentAlignment = Alignment.Center
                                         ) {
-                                            Icon(
-                                                Icons.Filled.Lock,
-                                                contentDescription = null,
-                                                tint = SlateText,
-                                                modifier = Modifier.size(32.dp)
-                                            )
+                                            Icon(Icons.Filled.Lock, contentDescription = null, tint = SlateText, modifier = Modifier.size(32.dp))
                                         }
-                                        Text(
-                                            name,
-                                            fontSize = 11.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = Color.White,
-                                            textAlign = TextAlign.Center
-                                        )
+                                        Text(name, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White, textAlign = TextAlign.Center)
                                         LinearProgressIndicator(
                                             progress = { progress },
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .height(4.dp)
-                                                .clip(RoundedCornerShape(2.dp)),
+                                            modifier = Modifier.fillMaxWidth().height(4.dp).clip(RoundedCornerShape(2.dp)),
                                             color = PrimaryBlue,
                                             trackColor = SlateBorder
                                         )
-                                        Text(
-                                            label,
-                                            fontSize = 10.sp,
-                                            color = SlateText,
-                                            textAlign = TextAlign.Center
-                                        )
+                                        Text(label, fontSize = 10.sp, color = SlateText, textAlign = TextAlign.Center)
                                     }
                                 }
-                                if (row.size == 1) {
-                                    Spacer(modifier = Modifier.weight(1f))
-                                }
+                                if (row.size == 1) Spacer(modifier = Modifier.weight(1f))
                             }
                         }
                     }
@@ -296,15 +301,9 @@ fun AchievementsScreen(
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        verticalAlignment = Alignment.Top
-                    ) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Top) {
                         Box(
-                            modifier = Modifier
-                                .size(48.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(PrimaryBlue),
+                            modifier = Modifier.size(48.dp).clip(RoundedCornerShape(12.dp)).background(PrimaryBlue),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(Icons.Filled.RocketLaunch, contentDescription = null, tint = Color.White, modifier = Modifier.size(24.dp))
@@ -321,19 +320,11 @@ fun AchievementsScreen(
                     }
                     LinearProgressIndicator(
                         progress = { 0.45f },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(8.dp)
-                            .clip(RoundedCornerShape(4.dp)),
+                        modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)),
                         color = PrimaryBlue,
                         trackColor = SlateBorder
                     )
-                    Text(
-                        "Requirement: 4/9 Quizzes Perfect",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = PrimaryBlue
-                    )
+                    Text("Requirement: 4/9 Quizzes Perfect", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = PrimaryBlue)
                 }
             }
         }

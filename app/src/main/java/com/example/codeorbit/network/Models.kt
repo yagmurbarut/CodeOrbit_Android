@@ -33,37 +33,42 @@ data class StartQuizRequest(
     val fromFavoritesOnly: Boolean = false
 )
 
+// ========== QUIZ ==========
 data class QuizResponse(
     val quizId: Int,
+    val categoryName: String,
+    val difficultyLevel: String,
+    val totalQuestions: Int,
     val questions: List<QuestionResponse>
 )
 
 data class QuestionResponse(
+    val quizQuestionId: Int,
     val questionId: Int,
     val questionText: String,
-    val options: List<OptionResponse>,
-    val difficultyLevel: Int,
-    val categoryId: Int
+    val questionType: String,
+    val options: List<OptionResponse>
 )
 
 data class OptionResponse(
+    @com.google.gson.annotations.SerializedName("id")
     val optionId: Int,
     val optionText: String
 )
 
 data class SubmitAnswerRequest(
     val quizId: Int,
-    val questionId: Int,
+    val quizQuestionId: Int,
     val selectedOptionId: Int
 )
 
 data class QuizResultResponse(
     val quizId: Int,
-    val score: Int,
-    val correctAnswers: Int,
     val totalQuestions: Int,
+    val correctAnswers: Int,
+    val wrongAnswers: Int,
     val successRate: Double,
-    val newBadges: List<BadgeResponse>
+    val completedAt: String
 )
 
 data class QuizHistoryResponse(
@@ -76,39 +81,71 @@ data class QuizHistoryResponse(
 
 // ========== CATEGORY ==========
 data class CategoryResponse(
+    @com.google.gson.annotations.SerializedName("id")
     val categoryId: Int,
     val name: String,
-    val iconUrl: String?
+    val language: String? = null,
+    val iconUrl: String? = null
 )
 
 // ========== STATISTICS ==========
 data class StatisticsResponse(
     val totalQuizzes: Int,
-    val averageScore: Double,
+    val totalQuestionsSolved: Int,
+    val totalCorrectAnswers: Int,
+    val totalWrongAnswers: Int,
+    val overallSuccessRate: Double,
     val currentStreak: Int,
     val longestStreak: Int,
-    val totalCorrectAnswers: Int,
-    val totalQuestions: Int
+    val categoryStats: List<CategoryStatResponse>,
+    val difficultyStats: List<DifficultyStatResponse>,
+    val mostWrongQuestions: List<MostWrongQuestionResponse>
+)
+
+data class CategoryStatResponse(
+    val categoryName: String,
+    val questionsSolved: Int,
+    val correctAnswers: Int,
+    val successRate: Double
+)
+
+data class DifficultyStatResponse(
+    val difficultyLevel: String,
+    val questionsSolved: Int,
+    val correctAnswers: Int,
+    val successRate: Double
+)
+
+data class MostWrongQuestionResponse(
+    val questionId: Int,
+    val questionText: String,
+    val categoryName: String,
+    val timesAnswered: Int,
+    val timesWrong: Int,
+    val wrongRate: Double
 )
 
 // ========== BADGE ==========
 data class BadgeResponse(
-    val badgeId: Int,
+    val id: Int,
     val name: String,
     val description: String,
-    val iconUrl: String?,
-    val earnedAt: String?
+    val icon: String?,
+    val isEarned: Boolean = false,
+    val earnedAt: String? = null,
+    val progress: Int = 0,
+    val requiredCount: Int = 0
 )
-
-// ========== LEADERBOARD ==========
 data class LeaderboardResponse(
     val rank: Int,
     val userId: Int,
     val username: String,
     val score: Int,
-    val avatarUrl: String?
+    val successRate: Double,
+    val badgeCount: Int,
+    val currentStreak: Int,
+    val isCurrentUser: Boolean
 )
-
 // ========== FRIENDS ==========
 data class SendFriendRequestRequest(
     val senderId: Int,
@@ -121,7 +158,29 @@ data class FriendResponse(
     val avatarUrl: String?,
     val currentStreak: Int
 )
+data class FriendSearchResponse(
+    val userId: Int,
+    val username: String,
+    val email: String,
+    val stats: FriendStatsResponse
+)
+data class FriendRequestResponse(
+    val requestId: Int,
+    val senderId: Int,
+    val senderUsername: String,
+    val status: String,
+    val sentAt: String
+)
 
+data class RespondFriendRequestRequest(
+    val requestId: Int,
+    val accept: Boolean
+)
+data class FriendStatsResponse(
+    val totalQuizzes: Int,
+    val currentStreak: Int,
+    val overallSuccessRate: Double
+)
 // ========== NOTIFICATIONS ==========
 data class NotificationResponse(
     val notificationId: Int,
@@ -129,10 +188,69 @@ data class NotificationResponse(
     val isRead: Boolean,
     val createdAt: String
 )
+data class AddFavoriteRequest(
+    val userId: Int,
+    val questionId: Int
+)
 
+data class FavoriteQuestionResponse(
+    val id: Int,
+    val questionId: Int,
+    val questionText: String,
+    val categoryName: String,
+    val difficultyLevel: String,
+    val questionType: String,
+    val addedAt: String
+)
 // ========== DAILY CHALLENGE ==========
 data class DailyChallengeResponse(
     val challengeId: Int,
-    val question: QuestionResponse,
-    val isCompleted: Boolean
+    val date: String,
+    val categoryName: String,
+    val difficultyLevel: String,
+    val totalQuestions: Int,
+    val hasCompleted: Boolean,
+    val questions: List<ChallengeQuestionResponse>
+)
+
+data class ChallengeQuestionResponse(
+    val questionId: Int,
+    val questionText: String,
+    val questionType: String,
+    val options: List<OptionResponse>
+)
+
+data class SubmitChallengeRequest(
+    val userId: Int,
+    val dailyChallengeId: Int,
+    val answers: List<ChallengeAnswerRequest>
+)
+
+data class ChallengeAnswerRequest(
+    val questionId: Int,
+    val selectedOptionId: Int
+)
+
+data class DailyChallengeResultResponse(
+    val correctAnswers: Int,
+    val totalQuestions: Int,
+    val successRate: Double,
+    val rank: Int,
+    val totalParticipants: Int,
+    val answerResults: List<ChallengeAnswerResultResponse>
+)
+
+data class ChallengeAnswerResultResponse(
+    val questionId: Int,
+    val isCorrect: Boolean,
+    val correctOptionId: Int
+)
+
+data class ChallengeLeaderboardResponse(
+    val rank: Int,
+    val username: String,
+    val correctAnswers: Int,
+    val totalQuestions: Int,
+    val successRate: Double,
+    val completedAt: String
 )
