@@ -66,6 +66,17 @@ interface ApiService {
     @GET("api/Notification/{userId}")
     suspend fun getNotifications(@Path("userId") userId: Int): List<NotificationResponse>
 
+    @GET("api/Notification/{userId}/unread-count")
+    suspend fun getUnreadCount(@Path("userId") userId: Int): Int
+
+    @PUT("api/Notification/{notificationId}/read")
+    suspend fun markAsRead(@Path("notificationId") notificationId: Int): retrofit2.Response<Unit>
+
+    @PUT("api/Notification/{userId}/read-all")
+    suspend fun markAllAsRead(@Path("userId") userId: Int): retrofit2.Response<Unit>
+
+    @DELETE("api/Notification/{notificationId}")
+    suspend fun deleteNotification(@Path("notificationId") notificationId: Int): retrofit2.Response<Unit>
     // ========== DAILY CHALLENGE ==========
     @GET("api/Challenge/today/{userId}")
     suspend fun getDailyChallenge(@Path("userId") userId: Int): DailyChallengeResponse
@@ -92,4 +103,17 @@ interface ApiService {
         @Path("userId") userId: Int,
         @Path("questionId") questionId: Int
     ): Boolean
+    @GET("api/User/{userId}")
+    suspend fun getUserProfile(@Path("userId") userId: Int): UserProfileResponse
+
+    @PUT("api/User/username")
+    suspend fun updateUsername(@Body request: UpdateUsernameRequest): retrofit2.Response<Unit>
+
+    @PUT("api/User/password")
+    suspend fun updatePassword(@Body request: UpdatePasswordRequest): retrofit2.Response<Unit>
+
+    @PUT("api/User/profile-photo")
+    suspend fun updateProfilePhoto(@Body request: UpdateProfilePhotoRequest): retrofit2.Response<Unit>
+    @PUT("api/User/avatar")
+    suspend fun updateAvatar(@Body request: UpdateAvatarRequest): retrofit2.Response<Unit>
 }

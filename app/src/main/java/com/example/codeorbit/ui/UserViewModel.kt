@@ -16,12 +16,16 @@ data class UserUiState(
     val globalLeaderboard: List<LeaderboardResponse> = emptyList(),
     val weeklyLeaderboard: List<LeaderboardResponse> = emptyList(),
     val friends: List<FriendResponse> = emptyList(),
-    val notifications: List<NotificationResponse> = emptyList(),
     val searchResults: List<FriendSearchResponse> = emptyList(),
     val friendRequests: List<FriendRequestResponse> = emptyList(),
     val friendRequestSent: Boolean = false,
     val errorMessage: String? = null,
-    val favorites: List<FavoriteQuestionResponse> = emptyList()
+    val favorites: List<FavoriteQuestionResponse> = emptyList(),
+    val notifications: List<NotificationResponse> = emptyList(),
+    val unreadCount: Int = 0,
+    val profilePhoto: String? = null,
+    val userEmail: String = "",
+    val avatar: String? = null
 )
 
 class UserViewModel(application: Application) : AndroidViewModel(application) {
@@ -29,6 +33,7 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
     private val _uiState = MutableStateFlow(UserUiState())
     val uiState: StateFlow<UserUiState> = _uiState
     val favorites: List<FavoriteQuestionResponse> = emptyList()
+
 
     fun loadStatistics(userId: Int) {
         android.util.Log.d("StatsDebug", "loadStatistics called with userId=$userId")
@@ -50,7 +55,26 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
             } catch (e: Exception) { }
         }
     }
-
+    fun updateAvatar(userId: Int, avatar: String) {
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.apiService.updateAvatar(
+                    UpdateAvatarRequest(userId = userId, avatar = avatar)
+                )
+                if (response.isSuccessful) {
+                    // Fotoğrafı sıfırla, avatarı set et
+                    _uiState.value = _uiState.value.copy(
+                        avatar = avatar,
+                        profilePhoto = null
+                    )
+                    // Backend'de de fotoğrafı sil
+                    RetrofitClient.apiService.updateProfilePhoto(
+                        UpdateProfilePhotoRequest(userId = userId, photoBase64 = "")
+                    )
+                }
+            } catch (e: Exception) { }
+        }
+    }
     fun removeFavorite(userId: Int, questionId: Int) {
         viewModelScope.launch {
             try {
@@ -142,7 +166,110 @@ class UserViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
     }
+    fun loadNotifications(userId: Int) {
+        viewModelScope.launch {
+            try {
+                val notifications = RetrofitClient.apiService.getNotifications(userId)
+                val unreadCount = RetrofitClient.apiService.getUnreadCount(userId)
+                _uiState.value = _uiState.value.copy(
+                    notifications = notifications,
+                    unreadCount = unreadCount
+                )
+            } catch (e: Exception) { }
+        }
+    }
 
+    fun markAsRead(notificationId: Int, userId: Int) {
+        viewModelScope.launch {
+            try {
+                RetrofitClient.apiService.markAsRead(notificationId)
+                loadNotifications(userId)
+            } catch (e: Exception) { }
+        }
+    }
+
+    fun markAllAsRead(userId: Int) {
+        viewModelScope.launch {
+            try {
+                RetrofitClient.apiService.markAllAsRead(userId)
+                _uiState.value = _uiState.value.copy(
+                    notifications = _uiState.value.notifications.map { it.copy(isRead = true) },
+                    unreadCount = 0
+                )
+            } catch (e: Exception) { }
+        }
+    }
+
+    fun deleteNotification(notificationId: Int, userId: Int) {
+        viewModelScope.launch {
+            try {
+                RetrofitClient.apiService.deleteNotification(notificationId)
+                _uiState.value = _uiState.value.copy(
+                    notifications = _uiState.value.notifications.filter { it.id != notificationId }
+                )
+            } catch (e: Exception) { }
+        }
+    }
+    fun updateProfilePhoto(userId: Int, photoBase64: String) {
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.apiService.updateProfilePhoto(
+                    UpdateProfilePhotoRequest(userId = userId, photoBase64 = photoBase64)
+                )
+                android.util.Log.d("ProfileDebug", "Photo update response: ${response.code()}")
+                if (response.isSuccessful) {
+                    _uiState.value = _uiState.value.copy(profilePhoto = photoBase64)
+                    android.util.Log.d("ProfileDebug", "Photo saved successfully")
+                } else {
+                    android.util.Log.d("ProfileDebug", "Photo save failed: ${response.errorBody()?.string()}")
+                }
+            } catch (e: Exception) {
+                android.util.Log.d("ProfileDebug", "Photo save exception: ${e.message}")
+            }
+        }
+    }
+
+    fun loadUserProfile(userId: Int) {
+        viewModelScope.launch {
+            try {
+                val profile = RetrofitClient.apiService.getUserProfile(userId)
+                _uiState.value = _uiState.value.copy(
+                    profilePhoto = profile.profilePhoto,
+                    userEmail = profile.email,
+                    avatar = profile.avatar
+                )
+            } catch (e: Exception) { }
+        }
+    }
+    fun updateUsername(userId: Int, newUsername: String, onResult: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.apiService.updateUsername(
+                    UpdateUsernameRequest(userId = userId, newUsername = newUsername)
+                )
+                onResult(response.isSuccessful)
+            } catch (e: Exception) {
+                onResult(false)
+            }
+        }
+    }
+
+    fun updatePassword(userId: Int, currentPassword: String, newPassword: String, onResult: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.apiService.updatePassword(
+                    UpdatePasswordRequest(
+                        userId = userId,
+                        currentPassword = currentPassword,
+                        newPassword = newPassword
+                    )
+                )
+                onResult(response.isSuccessful)
+            } catch (e: Exception) {
+                onResult(false)
+            }
+        }
+    }
     fun sendFriendRequest(senderId: Int, receiverId: Int) {
         viewModelScope.launch {
             try {

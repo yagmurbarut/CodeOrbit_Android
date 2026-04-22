@@ -128,7 +128,8 @@ class MainActivity : ComponentActivity() {
                             onNavigateToFriends = { navController.navigate("friends") },
                             onNavigateToProfile = { navController.navigate("profile") },
                             onNavigateToAchievements = { navController.navigate("achievements") },
-                            onNavigateToChallenge = { navController.navigate("daily_challenge") }
+                            onNavigateToChallenge = { navController.navigate("daily_challenge") },
+                            onNavigateToNotifications = { navController.navigate("notifications") }
                         )
                     }
                     composable("quiz_setup") {
@@ -198,6 +199,7 @@ class MainActivity : ComponentActivity() {
                         ProfileScreen(
                             userId = userId,
                             username = username,
+                            onNavigateToAccountSettings = { navController.navigate("account_settings") },
                             onNavigateBack = { navController.popBackStack() },
                             onNavigateToFavorites = { navController.navigate("favorites") },
                             onLogout = {
@@ -243,6 +245,26 @@ class MainActivity : ComponentActivity() {
                     }
                     composable("favorites") {
                         FavoritesScreen(
+                            userId = userId,
+                            onNavigateBack = { navController.popBackStack() },
+                            viewModel = userViewModel
+                        )
+                    }
+                    composable("account_settings") {
+                        AccountSettingsScreen(
+                            userId = userId,
+                            currentUsername = username,
+                            onNavigateBack = { navController.popBackStack() },
+                            onUsernameUpdated = { newName ->
+                                username = newName
+                                // prefs'e de kaydet
+                                prefs.edit().putString("username", newName).apply()
+                            },
+                            viewModel = userViewModel
+                        )
+                    }
+                    composable("notifications") {
+                        NotificationScreen(
                             userId = userId,
                             onNavigateBack = { navController.popBackStack() },
                             viewModel = userViewModel

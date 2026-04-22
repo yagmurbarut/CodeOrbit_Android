@@ -326,15 +326,15 @@ fun FriendsScreen(
                                                 horizontalArrangement = Arrangement.spacedBy(4.dp)
                                             ) {
                                                 Icon(
-                                                    if (friend.currentStreak > 0) Icons.Filled.LocalFireDepartment else Icons.Filled.TimerOff,
+                                                    if (friend.stats.currentStreak > 0) Icons.Filled.LocalFireDepartment else Icons.Filled.TimerOff,
                                                     contentDescription = null,
-                                                    tint = if (friend.currentStreak > 0) Color(0xFFF97316) else SlateText,
+                                                    tint = if (friend.stats.currentStreak > 0) Color(0xFFF97316) else SlateText,
                                                     modifier = Modifier.size(14.dp)
                                                 )
                                                 Text(
-                                                    if (friend.currentStreak > 0) "${friend.currentStreak} Day Streak" else "No active streak",
+                                                    if (friend.stats.currentStreak > 0) "${friend.stats.currentStreak} Day Streak" else "No active streak",
                                                     fontSize = 12.sp,
-                                                    color = if (friend.currentStreak > 0) Color(0xFFF97316) else SlateText
+                                                    color = if (friend.stats.currentStreak > 0) Color(0xFFF97316) else SlateText
                                                 )
                                             }
                                         }

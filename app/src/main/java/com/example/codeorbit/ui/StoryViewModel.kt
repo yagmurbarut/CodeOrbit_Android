@@ -118,14 +118,14 @@ class StoryViewModel(application: Application) : AndroidViewModel(application) {
             try {
                 val friends = RetrofitClient.apiService.getFriends(userId)
                 if (friends.isNotEmpty()) {
-                    val activeFriend = friends.maxByOrNull { it.currentStreak }
-                    if (activeFriend != null && activeFriend.currentStreak > 0) {
+                    val activeFriend = friends.maxByOrNull { it.stats.currentStreak }
+                    if (activeFriend != null && activeFriend.stats.currentStreak > 0) {
                         stories.add(
                             Story(
                                 id = 5,
                                 type = StoryType.FRIEND_ACTIVITY,
                                 title = "${activeFriend.username} Aktif!",
-                                subtitle = "${activeFriend.currentStreak} günlük serisi var 🔥",
+                                subtitle = "${activeFriend.stats.currentStreak} günlük serisi var 🔥",
                                 emoji = "👥",
                                 gradientColors = listOf(
                                     androidx.compose.ui.graphics.Color(0xFF059669),

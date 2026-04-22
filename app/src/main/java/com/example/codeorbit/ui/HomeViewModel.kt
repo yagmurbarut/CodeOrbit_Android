@@ -18,6 +18,9 @@ data class HomeUiState(
     val errorMessage: String? = null,
     val totalQuizzes: Int = 0,
     val overallSuccessRate: Double = 0.0,
+    val unreadNotificationCount: Int = 0,
+    val profilePhoto: String? = null,
+    val avatar: String? = null
 )
 
 data class QuizHistoryItem(
@@ -37,19 +40,30 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         val effectiveUserId = if (userId == 0) RetrofitClient.userId else userId
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
-
+            try {
+                val profile = RetrofitClient.apiService.getUserProfile(effectiveUserId)
+                _uiState.value = _uiState.value.copy(profilePhoto = profile.profilePhoto)
+            } catch (e: Exception) { }
+            // Unread count — try-catch içinde
+            try {
+                val unreadCount = RetrofitClient.apiService.getUnreadCount(effectiveUserId)
+                _uiState.value = _uiState.value.copy(unreadNotificationCount = unreadCount)
+            } catch (e: Exception) { }
+            try {
+                val profile = RetrofitClient.apiService.getUserProfile(effectiveUserId)
+                _uiState.value = _uiState.value.copy(
+                    profilePhoto = profile.profilePhoto?.takeIf { it.isNotEmpty() },
+                    avatar = profile.avatar
+                )
+            } catch (e: Exception) { }
             try {
                 val stats = RetrofitClient.apiService.getUserStatistics(effectiveUserId)
-                _uiState.value = _uiState.value.copy(
-                    streakDays = stats.currentStreak
-                )
                 _uiState.value = _uiState.value.copy(
                     streakDays = stats.currentStreak,
                     totalQuizzes = stats.totalQuizzes,
                     overallSuccessRate = stats.overallSuccessRate
                 )
-            } catch (e: Exception) {
-            }
+            } catch (e: Exception) { }
 
             try {
                 val challenge = RetrofitClient.apiService.getDailyChallenge(effectiveUserId)
@@ -58,6 +72,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                     dailyChallengeXp = 50
                 )
             } catch (e: Exception) { }
+
             try {
                 val history = RetrofitClient.apiService.getQuizHistory(effectiveUserId)
                 val recent = history.take(2).map {
@@ -66,7 +81,6 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                         score = it.score,
                         completedAt = formatDate(it.completedAt)
                     )
-
                 }
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,

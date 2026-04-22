@@ -155,8 +155,9 @@ data class SendFriendRequestRequest(
 data class FriendResponse(
     val userId: Int,
     val username: String,
-    val avatarUrl: String?,
-    val currentStreak: Int
+    val email: String,
+    val friendsSince: String,
+    val stats: FriendStatsResponse
 )
 data class FriendSearchResponse(
     val userId: Int,
@@ -183,10 +184,13 @@ data class FriendStatsResponse(
 )
 // ========== NOTIFICATIONS ==========
 data class NotificationResponse(
-    val notificationId: Int,
+    val id: Int,
+    val type: String,
+    val title: String,
     val message: String,
     val isRead: Boolean,
-    val createdAt: String
+    val createdAt: String,
+    val actionUrl: String?
 )
 data class AddFavoriteRequest(
     val userId: Int,
@@ -253,4 +257,32 @@ data class ChallengeLeaderboardResponse(
     val totalQuestions: Int,
     val successRate: Double,
     val completedAt: String
+)
+data class UserProfileResponse(
+    val id: Int,
+    val username: String,
+    val email: String,
+    val profilePhoto: String?,
+    val avatar: String?,
+    val createdAt: String
+)
+
+data class UpdateUsernameRequest(
+    val userId: Int,
+    val newUsername: String
+)
+
+data class UpdatePasswordRequest(
+    val userId: Int,
+    val currentPassword: String,
+    val newPassword: String
+)
+
+data class UpdateProfilePhotoRequest(
+    val userId: Int,
+    val photoBase64: String
+)
+data class UpdateAvatarRequest(
+    val userId: Int,
+    val avatar: String
 )
