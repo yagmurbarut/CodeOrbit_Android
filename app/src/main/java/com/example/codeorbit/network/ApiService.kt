@@ -46,15 +46,74 @@ interface ApiService {
     // ========== FRIENDS ==========
     @POST("api/Friend/request")
     suspend fun sendFriendRequest(@Body request: SendFriendRequestRequest): retrofit2.Response<Unit>
+    @GET("api/Friend/requests/{userId}")
+    suspend fun getFriendRequests(@Path("userId") userId: Int): List<FriendRequestResponse>
 
+    @POST("api/Friend/respond/{userId}")
+    suspend fun respondFriendRequest(
+        @Path("userId") userId: Int,
+        @Body request: RespondFriendRequestRequest
+    ): retrofit2.Response<Unit>
     @GET("api/Friend/{userId}")
     suspend fun getFriends(@Path("userId") userId: Int): List<FriendResponse>
 
+    @GET("api/Friend/search")
+    suspend fun searchUsers(
+        @Query("searchTerm") searchTerm: String,
+        @Query("currentUserId") currentUserId: Int
+    ): List<FriendSearchResponse>
     // ========== NOTIFICATIONS ==========
     @GET("api/Notification/{userId}")
     suspend fun getNotifications(@Path("userId") userId: Int): List<NotificationResponse>
 
+    @GET("api/Notification/{userId}/unread-count")
+    suspend fun getUnreadCount(@Path("userId") userId: Int): Int
+
+    @PUT("api/Notification/{notificationId}/read")
+    suspend fun markAsRead(@Path("notificationId") notificationId: Int): retrofit2.Response<Unit>
+
+    @PUT("api/Notification/{userId}/read-all")
+    suspend fun markAllAsRead(@Path("userId") userId: Int): retrofit2.Response<Unit>
+
+    @DELETE("api/Notification/{notificationId}")
+    suspend fun deleteNotification(@Path("notificationId") notificationId: Int): retrofit2.Response<Unit>
     // ========== DAILY CHALLENGE ==========
     @GET("api/Challenge/today/{userId}")
     suspend fun getDailyChallenge(@Path("userId") userId: Int): DailyChallengeResponse
+
+    @POST("api/Challenge/submit")
+    suspend fun submitChallenge(@Body request: SubmitChallengeRequest): DailyChallengeResultResponse
+
+    @GET("api/Challenge/leaderboard")
+    suspend fun getChallengeLeaderboard(): List<ChallengeLeaderboardResponse>
+    @POST("api/Favorite")
+    suspend fun addFavorite(@Body request: AddFavoriteRequest): retrofit2.Response<Unit>
+
+    @DELETE("api/Favorite/{userId}/{questionId}")
+    suspend fun removeFavorite(
+        @Path("userId") userId: Int,
+        @Path("questionId") questionId: Int
+    ): retrofit2.Response<Unit>
+
+    @GET("api/Favorite/{userId}")
+    suspend fun getFavorites(@Path("userId") userId: Int): List<FavoriteQuestionResponse>
+
+    @GET("api/Favorite/{userId}/check/{questionId}")
+    suspend fun checkFavorite(
+        @Path("userId") userId: Int,
+        @Path("questionId") questionId: Int
+    ): Boolean
+    @GET("api/User/{userId}")
+    suspend fun getUserProfile(@Path("userId") userId: Int): UserProfileResponse
+
+    @PUT("api/User/username")
+    suspend fun updateUsername(@Body request: UpdateUsernameRequest): retrofit2.Response<Unit>
+
+    @PUT("api/User/password")
+    suspend fun updatePassword(@Body request: UpdatePasswordRequest): retrofit2.Response<Unit>
+
+    @PUT("api/User/profile-photo")
+    suspend fun updateProfilePhoto(@Body request: UpdateProfilePhotoRequest): retrofit2.Response<Unit>
+    @PUT("api/User/avatar")
+    suspend fun updateAvatar(@Body request: UpdateAvatarRequest): retrofit2.Response<Unit>
 }

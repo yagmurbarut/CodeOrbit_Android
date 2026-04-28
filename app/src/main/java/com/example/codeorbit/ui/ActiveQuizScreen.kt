@@ -12,6 +12,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,52 +22,35 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.codeorbit.network.QuestionResponse
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.codeorbit.network.RetrofitClient
 import com.example.codeorbit.ui.splash.BackgroundDark
 import com.example.codeorbit.ui.splash.PrimaryBlue
+import kotlinx.coroutines.delay
 
 @Composable
 fun ActiveQuizScreen(
-    questions: List<QuestionResponse> = emptyList(),
-    categoryName: String = "Python Basics",
-    onQuizFinished: (correctAnswers: Int) -> Unit = {},
-    onNavigateBack: () -> Unit = {}
-) {
-    var currentQuestionIndex by remember { mutableIntStateOf(0) }
-    var selectedOptionId by remember { mutableStateOf<Int?>(null) }
-    var correctAnswers by remember { mutableIntStateOf(0) }
-
-    // Demo sorular (API bağlanana kadar)
-    val demoQuestions = listOf(
-        QuestionResponse(
-            questionId = 1,
-            questionText = "Which of the following is the correct syntax to output 'Hello World' in Python?",
-            options = listOf(
-                com.example.codeorbit.network.OptionResponse(1, "print(\"Hello World\")"),
-                com.example.codeorbit.network.OptionResponse(2, "p(\"Hello World\")"),
-                com.example.codeorbit.network.OptionResponse(3, "echo(\"Hello World\")"),
-                com.example.codeorbit.network.OptionResponse(4, "printf(\"Hello World\")")
-            ),
-            difficultyLevel = 1,
-            categoryId = 1
-        ),
-        QuestionResponse(
-            questionId = 2,
-            questionText = "What is the correct way to create a variable in Python?",
-            options = listOf(
-                com.example.codeorbit.network.OptionResponse(5, "var x = 5"),
-                com.example.codeorbit.network.OptionResponse(6, "x = 5"),
-                com.example.codeorbit.network.OptionResponse(7, "int x = 5"),
-                com.example.codeorbit.network.OptionResponse(8, "let x = 5")
-            ),
-            difficultyLevel = 1,
-            categoryId = 1
+    quizId: Int = 0,
+    userId: Int = 0,
+    onQuizFinished: (correctAnswers: Int, totalQuestions: Int) -> Unit = { _, _ -> },
+    onNavigateBack: () -> Unit = {},
+    viewModel: QuizViewModel = viewModel(
+        factory = QuizViewModelFactory(
+            androidx.compose.ui.platform.LocalContext.current.applicationContext as android.app.Application
         )
     )
+) {
+    val uiState by viewModel.uiState.collectAsState()
+    val effectiveUserId = if (userId == 0) RetrofitClient.userId else userId
 
-    val activeQuestions = if (questions.isEmpty()) demoQuestions else questions
-    val currentQuestion = activeQuestions.getOrNull(currentQuestionIndex)
-    val progress = (currentQuestionIndex + 1).toFloat() / activeQuestions.size.toFloat()
+    var currentQuestionIndex by remember { mutableIntStateOf(0) }
+    var selectedOptionId by remember { mutableStateOf<Int?>(null) }
+    var showFavoriteToast by remember { mutableStateOf(false) }
+    var favoriteToastMessage by remember { mutableStateOf("") }
+
+    val questions = uiState.questions
+    val currentQuestion = questions.getOrNull(currentQuestionIndex)
+    val progress = if (questions.isEmpty()) 0f else (currentQuestionIndex + 1).toFloat() / questions.size.toFloat()
 
     val animatedProgress by animateFloatAsState(
         targetValue = progress,
@@ -74,11 +58,23 @@ fun ActiveQuizScreen(
         label = "progress"
     )
 
-    if (currentQuestion == null) {
-        onQuizFinished(correctAnswers)
+    LaunchedEffect(showFavoriteToast) {
+        if (showFavoriteToast) {
+            delay(1500)
+            showFavoriteToast = false
+        }
+    }
+
+    if (questions.isEmpty()) {
+        Box(modifier = Modifier.fillMaxSize().background(BackgroundDark), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator(color = PrimaryBlue)
+        }
         return
     }
 
+    if (currentQuestion == null) return
+
+    val isFavorited = uiState.favoritedQuestions.contains(currentQuestion.questionId)
     val optionLabels = listOf("A", "B", "C", "D")
 
     Box(
@@ -105,14 +101,7 @@ fun ActiveQuizScreen(
                     Icon(Icons.Filled.Close, contentDescription = null, tint = Color.White, modifier = Modifier.size(22.dp))
                 }
                 Text("CodeOrbit", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(RoundedCornerShape(50)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(Icons.Filled.Star, contentDescription = null, tint = SlateText, modifier = Modifier.size(22.dp))
-                }
+                Spacer(modifier = Modifier.size(40.dp))
             }
 
             // Progress
@@ -126,7 +115,7 @@ fun ActiveQuizScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        "Question ${currentQuestionIndex + 1} of ${activeQuestions.size}",
+                        "Question ${currentQuestionIndex + 1} of ${questions.size}",
                         fontSize = 13.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = Color.White
@@ -137,20 +126,12 @@ fun ActiveQuizScreen(
                             .background(PrimaryBlue.copy(alpha = 0.15f))
                             .padding(horizontal = 10.dp, vertical = 4.dp)
                     ) {
-                        Text(
-                            categoryName,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = PrimaryBlue
-                        )
+                        Text(uiState.categoryName, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = PrimaryBlue)
                     }
                 }
                 LinearProgressIndicator(
                     progress = { animatedProgress },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(8.dp)
-                        .clip(RoundedCornerShape(4.dp)),
+                    modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)),
                     color = PrimaryBlue,
                     trackColor = SlateBackground
                 )
@@ -167,14 +148,45 @@ fun ActiveQuizScreen(
             ) {
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Soru başlığı
+                // Soru başlığı + favori butonu
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(
-                        "Question ${currentQuestionIndex + 1}",
-                        fontSize = 28.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.Top
+                    ) {
+                        Text(
+                            "Question ${currentQuestionIndex + 1}",
+                            fontSize = 28.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,
+                            modifier = Modifier.weight(1f)
+                        )
+                        // Favori butonu
+                        Box(
+                            modifier = Modifier
+                                .size(44.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(
+                                    if (isFavorited) Color(0xFFFBBF24).copy(alpha = 0.15f)
+                                    else SlateBackground
+                                )
+                                .clickable {
+                                    val willFavorite = !isFavorited
+                                    viewModel.toggleFavorite(effectiveUserId, currentQuestion.questionId)
+                                    favoriteToastMessage = if (willFavorite) "⭐ Favorilere eklendi!" else "Favorilerden kaldırıldı"
+                                    showFavoriteToast = true
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                if (isFavorited) Icons.Filled.Star else Icons.Outlined.StarOutline,
+                                contentDescription = "Favori",
+                                tint = if (isFavorited) Color(0xFFFBBF24) else SlateText,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
                     Text(
                         currentQuestion.questionText,
                         fontSize = 17.sp,
@@ -220,14 +232,33 @@ fun ActiveQuizScreen(
                             option.optionText,
                             fontSize = 16.sp,
                             fontWeight = FontWeight.SemiBold,
-                            color = if (isSelected) Color.White else Color.White.copy(alpha = 0.85f)
+                            color = Color.White.copy(alpha = if (isSelected) 1f else 0.85f)
                         )
                     }
                 }
             }
         }
 
-        // Next Question butonu
+        // Toast mesajı
+        if (showFavoriteToast) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 90.dp)
+                    .clip(RoundedCornerShape(50))
+                    .background(Color(0xFF1E2733))
+                    .padding(horizontal = 20.dp, vertical = 10.dp)
+            ) {
+                Text(
+                    favoriteToastMessage,
+                    fontSize = 13.sp,
+                    color = Color.White,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        }
+
+        // Next / Finish butonu
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -237,18 +268,23 @@ fun ActiveQuizScreen(
         ) {
             Button(
                 onClick = {
-                    if (selectedOptionId != null) {
-                        selectedOptionId = null
-                        if (currentQuestionIndex < activeQuestions.size - 1) {
-                            currentQuestionIndex++
-                        } else {
-                            onQuizFinished(correctAnswers)
+                    val chosenOption = selectedOptionId ?: return@Button
+                    viewModel.submitAnswer(
+                        quizId = quizId,
+                        quizQuestionId = currentQuestion.quizQuestionId,
+                        selectedOptionId = chosenOption
+                    )
+                    selectedOptionId = null
+
+                    if (currentQuestionIndex < questions.size - 1) {
+                        currentQuestionIndex++
+                    } else {
+                        viewModel.completeQuiz(quizId, userId) { correct, total ->
+                            onQuizFinished(correct, total)
                         }
                     }
                 },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
+                modifier = Modifier.fillMaxWidth().height(56.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = if (selectedOptionId != null) PrimaryBlue else SlateBackground
@@ -256,7 +292,7 @@ fun ActiveQuizScreen(
                 enabled = selectedOptionId != null
             ) {
                 Text(
-                    if (currentQuestionIndex < activeQuestions.size - 1) "Next Question" else "Finish Quiz",
+                    if (currentQuestionIndex < questions.size - 1) "Next Question" else "Finish Quiz",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold
                 )

@@ -1,11 +1,14 @@
 package com.example.codeorbit.ui
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -15,7 +18,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.text.font.FontWeight
@@ -24,12 +26,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.codeorbit.ui.splash.BackgroundDark
 import com.example.codeorbit.ui.splash.PrimaryBlue
+import kotlinx.coroutines.delay
 
 @Composable
 fun QuizResultScreen(
-    correctAnswers: Int = 8,
-    totalQuestions: Int = 10,
-    categoryName: String = "Python Basics",
+    correctAnswers: Int = 0,
+    totalQuestions: Int = 0,
+    categoryName: String = "",
+    newBadges: List<com.example.codeorbit.network.BadgeResponse> = emptyList(),
     onNewQuiz: () -> Unit = {},
     onBackHome: () -> Unit = {}
 ) {
@@ -37,6 +41,8 @@ fun QuizResultScreen(
     val percentage = (successRate * 100).toInt()
 
     var animationStarted by remember { mutableStateOf(false) }
+    var showBadgePopup by remember { mutableStateOf(false) }
+
     val animatedProgress by animateFloatAsState(
         targetValue = if (animationStarted) successRate else 0f,
         animationSpec = tween(durationMillis = 1000),
@@ -45,6 +51,12 @@ fun QuizResultScreen(
 
     LaunchedEffect(Unit) {
         animationStarted = true
+        if (newBadges.isNotEmpty()) {
+            delay(800)
+            showBadgePopup = true
+            delay(4000)
+            showBadgePopup = false
+        }
     }
 
     Box(
@@ -52,6 +64,7 @@ fun QuizResultScreen(
             .fillMaxSize()
             .background(BackgroundDark)
     ) {
+        // Ana içerik
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -88,7 +101,6 @@ fun QuizResultScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Başlık
             Text(
                 "Quiz Completed! 🎉",
                 fontSize = 28.sp,
@@ -130,11 +142,7 @@ fun QuizResultScreen(
                         fontWeight = FontWeight.Bold,
                         color = Color.White
                     )
-                    Text(
-                        "Success Rate",
-                        fontSize = 13.sp,
-                        color = SlateText
-                    )
+                    Text("Success Rate", fontSize = 13.sp, color = SlateText)
                 }
             }
 
@@ -145,9 +153,7 @@ fun QuizResultScreen(
                 modifier = Modifier
                     .clip(RoundedCornerShape(16.dp))
                     .background(PrimaryBlue.copy(alpha = 0.1f))
-                    .then(
-                        Modifier.padding(horizontal = 32.dp, vertical = 16.dp)
-                    )
+                    .padding(horizontal = 32.dp, vertical = 16.dp)
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -163,61 +169,7 @@ fun QuizResultScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
-
-            // Badge
-            Text(
-                "NEW BADGE EARNED",
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
-                color = SlateText,
-                letterSpacing = 2.sp
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            Box(contentAlignment = Alignment.Center) {
-                Box(
-                    modifier = Modifier
-                        .size(80.dp)
-                        .clip(CircleShape)
-                        .background(PrimaryBlue.copy(alpha = 0.3f))
-                )
-                Box(
-                    modifier = Modifier
-                        .size(96.dp)
-                        .clip(CircleShape)
-                        .background(
-                            Brush.linearGradient(
-                                colors = listOf(PrimaryBlue, Color(0xFF2563EB))
-                            )
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        Icons.Filled.Bolt,
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(48.dp)
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(
-                "Fast Learner",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
-            Text(
-                "Completed quiz in under 2 minutes!",
-                fontSize = 12.sp,
-                color = SlateText,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(top = 4.dp, bottom = 32.dp)
-            )
+            Spacer(modifier = Modifier.height(48.dp))
 
             // Butonlar
             Column(
@@ -228,9 +180,7 @@ fun QuizResultScreen(
             ) {
                 Button(
                     onClick = onNewQuiz,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
                     shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue)
                 ) {
@@ -238,13 +188,56 @@ fun QuizResultScreen(
                 }
                 Button(
                     onClick = onBackHome,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
                     shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = SlateBackground)
                 ) {
                     Text("Back Home", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                }
+            }
+        }
+
+        // Badge Pop-up — ekranın üstünde belirir ve kaybolur
+        AnimatedVisibility(
+            visible = showBadgePopup,
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .padding(top = 72.dp, start = 16.dp, end = 16.dp),
+            enter = fadeIn() + slideInVertically { -it },
+            exit = fadeOut()
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                newBadges.forEach { badge ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(Color(0xFF1E3A5F))
+                            .padding(12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(badge.icon ?: "🏆", fontSize = 28.sp)
+                        Column {
+                            Text(
+                                "🎉 Yeni Rozet Kazandın!",
+                                fontSize = 11.sp,
+                                color = PrimaryBlue,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                badge.name,
+                                fontSize = 14.sp,
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                badge.description,
+                                fontSize = 11.sp,
+                                color = SlateText
+                            )
+                        }
+                    }
                 }
             }
         }
