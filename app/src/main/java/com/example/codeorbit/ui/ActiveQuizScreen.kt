@@ -266,18 +266,25 @@ fun ActiveQuizScreen(
             Button(
                 onClick = {
                     val chosenOption = selectedOptionId ?: return@Button
-                    viewModel.submitAnswer(
-                        quizId = quizId,
-                        quizQuestionId = currentQuestion.quizQuestionId,
-                        selectedOptionId = chosenOption
-                    )
+                    if (quizId > 0) {
+                        viewModel.submitAnswer(
+                            quizId = quizId,
+                            quizQuestionId = currentQuestion.quizQuestionId,
+                            selectedOptionId = chosenOption
+                        )
+                    }
                     selectedOptionId = null
 
                     if (currentQuestionIndex < questions.size - 1) {
                         currentQuestionIndex++
                     } else {
-                        viewModel.completeQuiz(quizId, userId) { correct, total ->
-                            onQuizFinished(correct, total)
+                        if (quizId > 0) {
+                            viewModel.completeQuiz(quizId, userId) { correct, total ->
+                                onQuizFinished(correct, total)
+                            }
+                        } else {
+                            // AI Quiz — direkt sonuç ekranına git
+                            onQuizFinished(0, questions.size)
                         }
                     }
                 },

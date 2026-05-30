@@ -135,7 +135,14 @@ class QuizViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
     }
-
+    fun setAiQuestions(questions: List<QuestionResponse>) {
+        _uiState.value = _uiState.value.copy(
+            questions = questions,
+            currentQuizId = 0,
+            categoryName = "AI Quiz",
+            quizStarted = false
+        )
+    }
     fun resetQuiz() {
         _uiState.value = QuizUiState()
     }

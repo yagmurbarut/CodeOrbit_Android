@@ -70,6 +70,26 @@ data class QuizResultResponse(
     val successRate: Double,
     val completedAt: String
 )
+data class GenerateQuestionRequest(
+    val categoryName: String,
+    val difficultyLevel: String,
+    val questionType: String = "MultipleChoice",
+    val count: Int = 5,
+    val categoryId: Int
+)
+
+data class GenerateQuestionResponse(
+    val message: String,
+    val questions: List<QuestionDto>
+)
+
+data class QuestionDto(
+    val id: Int,
+    val questionText: String,
+    val questionType: String,
+    val difficultyLevel: String,
+    val options: List<OptionResponse>
+)
 
 data class QuizHistoryResponse(
     val quizId: Int,

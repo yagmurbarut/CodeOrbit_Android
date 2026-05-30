@@ -150,6 +150,10 @@ class MainActivity : ComponentActivity() {
                             onStartQuiz = { quizId ->
                                 navController.navigate("active_quiz/$quizId")
                             },
+                            onStartAiQuiz = { questions ->
+                                quizViewModel.setAiQuestions(questions)
+                                navController.navigate("active_quiz/0")
+                            },
                             viewModel = quizViewModel
                         )
                     }

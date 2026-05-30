@@ -21,6 +21,9 @@ interface ApiService {
     @POST("api/Quiz/{quizId}/complete")
     suspend fun completeQuiz(@Path("quizId") quizId: Int): QuizResultResponse
 
+    @POST("api/question/generate")
+    suspend fun generateQuestions(@Body request: GenerateQuestionRequest): GenerateQuestionResponse
+
     @GET("api/Quiz/history/{userId}")
     suspend fun getQuizHistory(@Path("userId") userId: Int): List<QuizHistoryResponse>
 
