@@ -88,7 +88,8 @@ data class QuestionDto(
     val questionText: String,
     val questionType: String,
     val difficultyLevel: String,
-    val options: List<OptionResponse>
+    val options: List<OptionResponse>,
+    val correctOptionIndex: Int = 0
 )
 
 data class QuizHistoryResponse(

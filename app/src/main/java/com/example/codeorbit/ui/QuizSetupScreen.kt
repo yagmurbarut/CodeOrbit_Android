@@ -386,7 +386,7 @@ fun QuizSetupScreen(
                                     val response = RetrofitClient.apiService.generateQuestions(request)
                                     val questions = response.questions.map { q ->
                                         com.example.codeorbit.network.QuestionResponse(
-                                            quizQuestionId = 0,
+                                            quizQuestionId = q.correctOptionIndex,
                                             questionId = q.id,
                                             questionText = q.questionText,
                                             questionType = q.questionType,

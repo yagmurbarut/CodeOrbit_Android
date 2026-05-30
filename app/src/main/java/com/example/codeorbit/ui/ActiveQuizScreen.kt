@@ -42,6 +42,7 @@ fun ActiveQuizScreen(
     val uiState by viewModel.uiState.collectAsState()
     val effectiveUserId = if (userId == 0) RetrofitClient.userId else userId
 
+    var correctAnswers by remember { mutableIntStateOf(0) }
     var currentQuestionIndex by remember { mutableIntStateOf(0) }
     var selectedOptionId by remember { mutableStateOf<Int?>(null) }
     var showFavoriteToast by remember { mutableStateOf(false) }
@@ -272,6 +273,11 @@ fun ActiveQuizScreen(
                             quizQuestionId = currentQuestion.quizQuestionId,
                             selectedOptionId = chosenOption
                         )
+                    } else {
+                        val correctOption = currentQuestion.options.getOrNull(currentQuestion.quizQuestionId)
+                        if (correctOption?.optionId == chosenOption) {
+                            correctAnswers++
+                        }
                     }
                     selectedOptionId = null
 
@@ -284,7 +290,7 @@ fun ActiveQuizScreen(
                             }
                         } else {
                             // AI Quiz — direkt sonuç ekranına git
-                            onQuizFinished(0, questions.size)
+                            onQuizFinished(correctAnswers, questions.size)
                         }
                     }
                 },
