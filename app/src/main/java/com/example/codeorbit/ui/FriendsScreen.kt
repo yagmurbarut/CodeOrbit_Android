@@ -52,7 +52,7 @@ fun FriendsScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(BackgroundDark)
+            .background(MaterialTheme.colorScheme.background)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             // Header
@@ -67,7 +67,7 @@ fun FriendsScreen(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
-                        .background(SlateBackground)
+                        .background(MaterialTheme.colorScheme.surface)
                         .clickable { onNavigateBack() },
                     contentAlignment = Alignment.Center
                 ) {
@@ -78,7 +78,7 @@ fun FriendsScreen(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
-                        .background(SlateBackground),
+                        .background(MaterialTheme.colorScheme.surface),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(Icons.Filled.PersonAdd, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
@@ -187,7 +187,7 @@ fun FriendsScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(16.dp))
-                                    .background(SlateBackground)
+                                    .background(MaterialTheme.colorScheme.surface)
                                     .padding(20.dp),
                                 contentAlignment = Alignment.Center
                             ) {
@@ -199,7 +199,7 @@ fun FriendsScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clip(RoundedCornerShape(16.dp))
-                                        .background(SlateBackground)
+                                        .background(MaterialTheme.colorScheme.surface)
                                         .padding(12.dp),
                                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                                     verticalAlignment = Alignment.CenterVertically
@@ -286,7 +286,7 @@ fun FriendsScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(16.dp))
-                                    .background(SlateBackground)
+                                    .background(MaterialTheme.colorScheme.surface)
                                     .padding(20.dp),
                                 contentAlignment = Alignment.Center
                             ) {
@@ -365,7 +365,7 @@ fun FriendsScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(16.dp))
-                                    .background(SlateBackground)
+                                    .background(MaterialTheme.colorScheme.surface)
                                     .padding(20.dp),
                                 contentAlignment = Alignment.Center
                             ) {
@@ -377,7 +377,7 @@ fun FriendsScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clip(RoundedCornerShape(16.dp))
-                                        .background(SlateBackground)
+                                        .background(MaterialTheme.colorScheme.surface)
                                         .padding(12.dp),
                                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                                     verticalAlignment = Alignment.CenterVertically

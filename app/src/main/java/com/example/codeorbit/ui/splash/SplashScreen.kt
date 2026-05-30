@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -22,6 +23,7 @@ import kotlinx.coroutines.delay
 
 val PrimaryBlue = Color(0xFF4B8FE2)
 val BackgroundDark = Color(0xFF121820)
+val BackgroundLight = Color(0xFFF6F7F8)
 
 @Composable
 fun SplashScreen(onNavigateToLogin: () -> Unit) {
@@ -43,7 +45,7 @@ fun SplashScreen(onNavigateToLogin: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(BackgroundDark),
+            .background(MaterialTheme.colorScheme.background),
         contentAlignment = Alignment.Center
     ) {
         // Arka plan glow efektleri

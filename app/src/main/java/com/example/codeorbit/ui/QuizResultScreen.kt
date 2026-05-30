@@ -62,7 +62,7 @@ fun QuizResultScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(BackgroundDark)
+            .background(MaterialTheme.colorScheme.background)
     ) {
         // Ana içerik
         Column(

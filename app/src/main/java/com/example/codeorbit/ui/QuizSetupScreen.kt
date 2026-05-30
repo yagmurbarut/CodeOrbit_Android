@@ -18,7 +18,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.codeorbit.ui.splash.BackgroundDark
 import com.example.codeorbit.ui.splash.PrimaryBlue
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -41,19 +40,14 @@ fun QuizSetupScreen(
     var questionCount by remember { mutableFloatStateOf(10f) }
     var favoritesOnly by remember { mutableStateOf(false) }
 
-    // Kategorileri yükle
-    LaunchedEffect(Unit) {
-        viewModel.loadCategories()
-    }
+    LaunchedEffect(Unit) { viewModel.loadCategories() }
 
-    // Quiz başladığında navigate et
     LaunchedEffect(uiState.quizStarted) {
         if (uiState.quizStarted && uiState.currentQuizId > 0) {
             onStartQuiz(uiState.currentQuizId)
         }
     }
 
-    // İlk kategoriyi otomatik seç
     LaunchedEffect(uiState.categories) {
         if (uiState.categories.isNotEmpty() && selectedCategoryId == 0) {
             selectedCategoryId = uiState.categories.first().categoryId
@@ -64,7 +58,7 @@ fun QuizSetupScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(BackgroundDark)
+            .background(MaterialTheme.colorScheme.background)
     ) {
         Column(
             modifier = Modifier
@@ -83,17 +77,17 @@ fun QuizSetupScreen(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(RoundedCornerShape(50))
-                        .background(SlateBackground)
+                        .background(MaterialTheme.colorScheme.surface)
                         .clickable { onNavigateBack() },
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Filled.ArrowBack, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
+                    Icon(Icons.Filled.ArrowBack, contentDescription = null, tint = MaterialTheme.colorScheme.onBackground, modifier = Modifier.size(20.dp))
                 }
                 Text(
                     text = "Quiz Setup",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.weight(1f).wrapContentWidth(Alignment.CenterHorizontally)
                 )
                 Spacer(modifier = Modifier.size(40.dp))
@@ -105,7 +99,7 @@ fun QuizSetupScreen(
             ) {
                 // Kategori seçimi
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Text("Select Category", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    Text("Select Category", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
 
                     if (uiState.categories.isEmpty()) {
                         Box(
@@ -124,7 +118,7 @@ fun QuizSetupScreen(
                                 Box(
                                     modifier = Modifier
                                         .clip(RoundedCornerShape(12.dp))
-                                        .background(if (isSelected) PrimaryBlue else SlateBackground)
+                                        .background(if (isSelected) PrimaryBlue else MaterialTheme.colorScheme.surface)
                                         .clickable {
                                             selectedCategoryId = category.categoryId
                                             selectedCategoryName = category.name
@@ -135,7 +129,7 @@ fun QuizSetupScreen(
                                         text = category.name,
                                         fontSize = 13.sp,
                                         fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
-                                        color = if (isSelected) Color.White else SlateText
+                                        color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                             }
@@ -145,12 +139,12 @@ fun QuizSetupScreen(
 
                 // Zorluk seviyesi
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Text("Difficulty Level", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    Text("Difficulty Level", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(12.dp))
-                            .background(SlateBackground)
+                            .background(MaterialTheme.colorScheme.surface)
                             .padding(4.dp)
                     ) {
                         listOf("Easy", "Medium", "Hard").forEachIndexed { index, label ->
@@ -158,7 +152,7 @@ fun QuizSetupScreen(
                                 modifier = Modifier
                                     .weight(1f)
                                     .clip(RoundedCornerShape(10.dp))
-                                    .background(if (selectedDifficulty == index) Color(0xFF2A3441) else Color.Transparent)
+                                    .background(if (selectedDifficulty == index) MaterialTheme.colorScheme.background else Color.Transparent)
                                     .clickable { selectedDifficulty = index }
                                     .padding(vertical = 10.dp),
                                 contentAlignment = Alignment.Center
@@ -167,7 +161,7 @@ fun QuizSetupScreen(
                                     text = label,
                                     fontSize = 14.sp,
                                     fontWeight = FontWeight.SemiBold,
-                                    color = if (selectedDifficulty == index) PrimaryBlue else SlateText
+                                    color = if (selectedDifficulty == index) PrimaryBlue else MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
@@ -181,7 +175,7 @@ fun QuizSetupScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.Bottom
                     ) {
-                        Text("Number of Questions", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        Text("Number of Questions", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
                         Text(questionCount.toInt().toString(), fontSize = 32.sp, fontWeight = FontWeight.Bold, color = PrimaryBlue)
                     }
                     Slider(
@@ -191,14 +185,14 @@ fun QuizSetupScreen(
                         steps = 4,
                         modifier = Modifier.fillMaxWidth(),
                         colors = SliderDefaults.colors(
-                            thumbColor = Color.White,
+                            thumbColor = PrimaryBlue,
                             activeTrackColor = PrimaryBlue,
-                            inactiveTrackColor = SlateBackground
+                            inactiveTrackColor = MaterialTheme.colorScheme.surface
                         )
                     )
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("5", fontSize = 12.sp, color = SlateText)
-                        Text("30", fontSize = 12.sp, color = SlateText)
+                        Text("5", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("30", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
 
@@ -207,7 +201,7 @@ fun QuizSetupScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(16.dp))
-                        .background(SlateBackground)
+                        .background(MaterialTheme.colorScheme.surface)
                         .padding(16.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
@@ -227,8 +221,8 @@ fun QuizSetupScreen(
                             Icon(Icons.Filled.Favorite, contentDescription = null, tint = PrimaryBlue, modifier = Modifier.size(20.dp))
                         }
                         Column {
-                            Text("Favorites Only", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                            Text("Only questions you've bookmarked", fontSize = 12.sp, color = SlateText)
+                            Text("Favorites Only", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
+                            Text("Only questions you've bookmarked", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                     Switch(
@@ -238,7 +232,6 @@ fun QuizSetupScreen(
                     )
                 }
 
-                // Hata mesajı
                 uiState.errorMessage?.let {
                     Text(it, color = Color.Red.copy(alpha = 0.8f), fontSize = 13.sp)
                 }
@@ -250,7 +243,7 @@ fun QuizSetupScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .align(Alignment.BottomCenter)
-                .background(BackgroundDark)
+                .background(MaterialTheme.colorScheme.background)
                 .padding(24.dp)
         ) {
             Button(

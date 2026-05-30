@@ -6,6 +6,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.*
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
@@ -22,12 +25,20 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        window.statusBarColor = android.graphics.Color.TRANSPARENT
+        WindowInsetsControllerCompat(window, window.decorView).apply {
+            hide(WindowInsetsCompat.Type.statusBars())
+            systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        }
         setContent {
-            CodeOrbitTheme(darkTheme = true) {
-                val navController = rememberNavController()
-                val context = LocalContext.current
-                val prefs = context.getSharedPreferences("codeorbit_prefs", Context.MODE_PRIVATE)
-
+            val navController = rememberNavController()
+            val context = LocalContext.current
+            val prefs = context.getSharedPreferences("codeorbit_prefs", Context.MODE_PRIVATE)
+            var isDarkTheme by remember {
+                mutableStateOf(prefs.getBoolean("dark_theme", true))
+            }
+            CodeOrbitTheme(darkTheme = isDarkTheme) {
                 val savedToken = prefs.getString("token", "") ?: ""
                 var savedUserId = prefs.getInt("userId", 0)
 
@@ -202,6 +213,10 @@ class MainActivity : ComponentActivity() {
                             onNavigateToAccountSettings = { navController.navigate("account_settings") },
                             onNavigateBack = { navController.popBackStack() },
                             onNavigateToFavorites = { navController.navigate("favorites") },
+                            onThemeChanged = { isDark ->
+                                isDarkTheme = isDark
+                                prefs.edit().putBoolean("dark_theme", isDark).apply()
+                            },
                             onLogout = {
                                 prefs.edit().clear().apply()
                                 RetrofitClient.authToken = ""

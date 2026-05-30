@@ -24,7 +24,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.codeorbit.network.RetrofitClient
-import com.example.codeorbit.ui.splash.BackgroundDark
 import com.example.codeorbit.ui.splash.PrimaryBlue
 import kotlinx.coroutines.delay
 
@@ -66,7 +65,7 @@ fun ActiveQuizScreen(
     }
 
     if (questions.isEmpty()) {
-        Box(modifier = Modifier.fillMaxSize().background(BackgroundDark), contentAlignment = Alignment.Center) {
+        Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background), contentAlignment = Alignment.Center) {
             CircularProgressIndicator(color = PrimaryBlue)
         }
         return
@@ -80,7 +79,7 @@ fun ActiveQuizScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(BackgroundDark)
+            .background(MaterialTheme.colorScheme.background)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             // Header
@@ -98,9 +97,9 @@ fun ActiveQuizScreen(
                         .clickable { onNavigateBack() },
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Filled.Close, contentDescription = null, tint = Color.White, modifier = Modifier.size(22.dp))
+                    Icon(Icons.Filled.Close, contentDescription = null, tint = MaterialTheme.colorScheme.onBackground, modifier = Modifier.size(22.dp))
                 }
-                Text("CodeOrbit", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                Text("CodeOrbit", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
                 Spacer(modifier = Modifier.size(40.dp))
             }
 
@@ -118,7 +117,7 @@ fun ActiveQuizScreen(
                         "Question ${currentQuestionIndex + 1} of ${questions.size}",
                         fontSize = 13.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.onBackground
                     )
                     Box(
                         modifier = Modifier
@@ -133,7 +132,7 @@ fun ActiveQuizScreen(
                     progress = { animatedProgress },
                     modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)),
                     color = PrimaryBlue,
-                    trackColor = SlateBackground
+                    trackColor = MaterialTheme.colorScheme.surface
                 )
             }
 
@@ -148,7 +147,6 @@ fun ActiveQuizScreen(
             ) {
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Soru başlığı + favori butonu
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -159,17 +157,16 @@ fun ActiveQuizScreen(
                             "Question ${currentQuestionIndex + 1}",
                             fontSize = 28.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color.White,
+                            color = MaterialTheme.colorScheme.onBackground,
                             modifier = Modifier.weight(1f)
                         )
-                        // Favori butonu
                         Box(
                             modifier = Modifier
                                 .size(44.dp)
                                 .clip(RoundedCornerShape(12.dp))
                                 .background(
                                     if (isFavorited) Color(0xFFFBBF24).copy(alpha = 0.15f)
-                                    else SlateBackground
+                                    else MaterialTheme.colorScheme.surface
                                 )
                                 .clickable {
                                     val willFavorite = !isFavorited
@@ -182,7 +179,7 @@ fun ActiveQuizScreen(
                             Icon(
                                 if (isFavorited) Icons.Filled.Star else Icons.Outlined.StarOutline,
                                 contentDescription = "Favori",
-                                tint = if (isFavorited) Color(0xFFFBBF24) else SlateText,
+                                tint = if (isFavorited) Color(0xFFFBBF24) else MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.size(24.dp)
                             )
                         }
@@ -191,7 +188,7 @@ fun ActiveQuizScreen(
                         currentQuestion.questionText,
                         fontSize = 17.sp,
                         fontWeight = FontWeight.Medium,
-                        color = SlateText,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         lineHeight = 26.sp
                     )
                 }
@@ -203,10 +200,10 @@ fun ActiveQuizScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(16.dp))
-                            .background(if (isSelected) PrimaryBlue.copy(alpha = 0.15f) else SlateBackground)
+                            .background(if (isSelected) PrimaryBlue.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surface)
                             .border(
                                 width = 2.dp,
-                                color = if (isSelected) PrimaryBlue else SlateBorder,
+                                color = if (isSelected) PrimaryBlue else MaterialTheme.colorScheme.outline,
                                 shape = RoundedCornerShape(16.dp)
                             )
                             .clickable { selectedOptionId = option.optionId }
@@ -218,21 +215,21 @@ fun ActiveQuizScreen(
                             modifier = Modifier
                                 .size(40.dp)
                                 .clip(RoundedCornerShape(10.dp))
-                                .background(if (isSelected) PrimaryBlue.copy(alpha = 0.3f) else Color(0xFF2A3441)),
+                                .background(if (isSelected) PrimaryBlue.copy(alpha = 0.3f) else MaterialTheme.colorScheme.background),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
                                 optionLabels.getOrElse(index) { "?" },
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = if (isSelected) PrimaryBlue else SlateText
+                                color = if (isSelected) PrimaryBlue else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                         Text(
                             option.optionText,
                             fontSize = 16.sp,
                             fontWeight = FontWeight.SemiBold,
-                            color = Color.White.copy(alpha = if (isSelected) 1f else 0.85f)
+                            color = MaterialTheme.colorScheme.onBackground
                         )
                     }
                 }
@@ -246,13 +243,13 @@ fun ActiveQuizScreen(
                     .align(Alignment.BottomCenter)
                     .padding(bottom = 90.dp)
                     .clip(RoundedCornerShape(50))
-                    .background(Color(0xFF1E2733))
+                    .background(MaterialTheme.colorScheme.surface)
                     .padding(horizontal = 20.dp, vertical = 10.dp)
             ) {
                 Text(
                     favoriteToastMessage,
                     fontSize = 13.sp,
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onBackground,
                     fontWeight = FontWeight.SemiBold
                 )
             }
@@ -263,7 +260,7 @@ fun ActiveQuizScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .align(Alignment.BottomCenter)
-                .background(BackgroundDark.copy(alpha = 0.95f))
+                .background(MaterialTheme.colorScheme.background.copy(alpha = 0.95f))
                 .padding(16.dp)
         ) {
             Button(
@@ -287,7 +284,7 @@ fun ActiveQuizScreen(
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (selectedOptionId != null) PrimaryBlue else SlateBackground
+                    containerColor = if (selectedOptionId != null) PrimaryBlue else MaterialTheme.colorScheme.surface
                 ),
                 enabled = selectedOptionId != null
             ) {

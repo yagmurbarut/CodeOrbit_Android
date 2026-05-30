@@ -1,5 +1,6 @@
 package com.example.codeorbit.ui
 
+import android.content.Context
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.util.Base64
@@ -36,7 +37,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.codeorbit.network.RetrofitClient
-import com.example.codeorbit.ui.splash.BackgroundDark
 import com.example.codeorbit.ui.splash.PrimaryBlue
 import kotlinx.coroutines.launch
 
@@ -62,6 +62,7 @@ fun ProfileScreen(
     onNavigateBack: () -> Unit = {},
     onNavigateToAccountSettings: () -> Unit = {},
     onLogout: () -> Unit = {},
+    onThemeChanged: (Boolean) -> Unit = {},
     onNavigateToFavorites: () -> Unit = {},
     viewModel: UserViewModel = viewModel(
         factory = UserViewModelFactory(
@@ -72,9 +73,10 @@ fun ProfileScreen(
     val uiState by viewModel.uiState.collectAsState()
     val stats = uiState.statistics
     val context = LocalContext.current
+    val prefs = context.getSharedPreferences("codeorbit_prefs", Context.MODE_PRIVATE)
     val scope = rememberCoroutineScope()
 
-    var darkMode by remember { mutableStateOf(true) }
+    var darkMode by remember { mutableStateOf(prefs.getBoolean("dark_theme", true)) }
     var pushNotifications by remember { mutableStateOf(true) }
     var leaderboardUpdates by remember { mutableStateOf(false) }
     var showAvatarSheet by remember { mutableStateOf(false) }
@@ -88,7 +90,6 @@ fun ProfileScreen(
         }
     }
 
-    // Galeri launcher
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -107,11 +108,10 @@ fun ProfileScreen(
         }
     }
 
-    // Avatar bottom sheet
     if (showAvatarSheet) {
         ModalBottomSheet(
             onDismissRequest = { showAvatarSheet = false },
-            containerColor = SlateBackground,
+            containerColor = MaterialTheme.colorScheme.surface,
             shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
         ) {
             Column(
@@ -125,7 +125,7 @@ fun ProfileScreen(
                     "Avatar Seç",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
 
@@ -159,8 +159,7 @@ fun ProfileScreen(
                     }
                 }
 
-                // Fotoğraf yükle butonu
-                HorizontalDivider(color = SlateBorder)
+                HorizontalDivider(color = MaterialTheme.colorScheme.outline)
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -175,7 +174,7 @@ fun ProfileScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(Icons.Filled.PhotoLibrary, contentDescription = null, tint = PrimaryBlue, modifier = Modifier.size(22.dp))
-                    Text("Galeriden Fotoğraf Seç", fontSize = 15.sp, fontWeight = FontWeight.Medium, color = Color.White)
+                    Text("Galeriden Fotoğraf Seç", fontSize = 15.sp, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onBackground)
                 }
             }
         }
@@ -184,7 +183,7 @@ fun ProfileScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(BackgroundDark)
+            .background(MaterialTheme.colorScheme.background)
     ) {
         Column(
             modifier = Modifier
@@ -192,7 +191,6 @@ fun ProfileScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(bottom = 32.dp)
         ) {
-            // Header
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -204,17 +202,17 @@ fun ProfileScreen(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
-                        .background(SlateBackground)
+                        .background(MaterialTheme.colorScheme.surface)
                         .clickable { onNavigateBack() },
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Filled.ArrowBack, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
+                    Icon(Icons.Filled.ArrowBack, contentDescription = null, tint = MaterialTheme.colorScheme.onBackground, modifier = Modifier.size(20.dp))
                 }
-                Text("Profil & Ayarlar", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                Text("Profil & Ayarlar", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
                 Spacer(modifier = Modifier.size(40.dp))
             }
 
-            // Profil kartı
+            // Profil kartı — gradient arka plan, beyaz yazılar kalmalı
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -231,7 +229,6 @@ fun ProfileScreen(
                     horizontalArrangement = Arrangement.spacedBy(20.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Avatar — fotoğraf > emoji avatar > baş harf
                     Box(contentAlignment = Alignment.BottomEnd) {
                         Box(
                             modifier = Modifier
@@ -280,7 +277,6 @@ fun ProfileScreen(
                                 }
                             }
                         }
-                        // Edit ikonu
                         Box(
                             modifier = Modifier
                                 .size(24.dp)
@@ -313,7 +309,6 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // İstatistik kartları
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -334,22 +329,20 @@ fun ProfileScreen(
             ) {
                 SettingsSection(title = "HESABIM") {
                     SettingsItem(icon = Icons.Filled.Star, label = "Favorilerim", subtitle = "Kaydettiğin sorular", showArrow = true, onClick = onNavigateToFavorites)
-                    HorizontalDivider(color = SlateBorder, modifier = Modifier.padding(horizontal = 16.dp))
-                    SettingsItem(
-                        icon = Icons.Filled.Lock,
-                        label = "Şifre Değiştir",
-                        subtitle = "Hesap güvenliği",
-                        showArrow = true,
-                        onClick = onNavigateToAccountSettings
-                    )                }
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outline, modifier = Modifier.padding(horizontal = 16.dp))
+                    SettingsItem(icon = Icons.Filled.Lock, label = "Şifre Değiştir", subtitle = "Hesap güvenliği", showArrow = true, onClick = onNavigateToAccountSettings)
+                }
 
                 SettingsSection(title = "GÖRÜNÜM") {
-                    SettingsToggleItem(icon = Icons.Filled.DarkMode, label = "Karanlık Tema", subtitle = "Göz dostu koyu tema", checked = darkMode, onCheckedChange = { darkMode = it })
+                    SettingsToggleItem(icon = Icons.Filled.DarkMode, label = "Karanlık Tema", subtitle = "Göz dostu koyu tema", checked = darkMode, onCheckedChange = {
+                        darkMode = it
+                        onThemeChanged(it)
+                    })
                 }
 
                 SettingsSection(title = "BİLDİRİMLER") {
                     SettingsToggleItem(icon = Icons.Filled.Notifications, label = "Anlık Bildirimler", subtitle = "Günlük challenge ve streak uyarıları", checked = pushNotifications, onCheckedChange = { pushNotifications = it })
-                    HorizontalDivider(color = SlateBorder, modifier = Modifier.padding(horizontal = 16.dp))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outline, modifier = Modifier.padding(horizontal = 16.dp))
                     SettingsToggleItem(icon = Icons.Filled.Leaderboard, label = "Sıralama Bildirimleri", subtitle = "Biri seni geçtiğinde bildir", checked = leaderboardUpdates, onCheckedChange = { leaderboardUpdates = it })
                 }
 
@@ -379,21 +372,21 @@ fun ProfileScreen(
 @Composable
 fun SettingsSection(title: String, content: @Composable ColumnScope.() -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(title, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = SlateText, letterSpacing = 2.sp, modifier = Modifier.padding(horizontal = 4.dp))
-        Column(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(SlateBackground), content = content)
+        Text(title, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant, letterSpacing = 2.sp, modifier = Modifier.padding(horizontal = 4.dp))
+        Column(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surface), content = content)
     }
 }
 
 @Composable
 fun MiniStatCard(modifier: Modifier = Modifier, emoji: String, value: String, label: String) {
     Column(
-        modifier = modifier.clip(RoundedCornerShape(12.dp)).background(SlateBackground).padding(12.dp),
+        modifier = modifier.clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.surface).padding(12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         Text(emoji, fontSize = 18.sp)
-        Text(value, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
-        Text(label, fontSize = 10.sp, color = SlateText, fontWeight = FontWeight.Medium)
+        Text(value, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
+        Text(label, fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Medium)
     }
 }
 
@@ -405,7 +398,7 @@ fun StatCard(modifier: Modifier = Modifier, value: String, label: String) {
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         Text(value, fontSize = 24.sp, fontWeight = FontWeight.Bold, color = PrimaryBlue)
-        Text(label, fontSize = 11.sp, color = SlateText, fontWeight = FontWeight.Medium, letterSpacing = 1.sp)
+        Text(label, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Medium, letterSpacing = 1.sp)
     }
 }
 
@@ -420,10 +413,10 @@ fun SettingsItem(icon: ImageVector, label: String, subtitle: String? = null, sho
             Icon(icon, contentDescription = null, tint = PrimaryBlue, modifier = Modifier.size(20.dp))
         }
         Column(modifier = Modifier.weight(1f)) {
-            Text(label, fontSize = 15.sp, fontWeight = FontWeight.Medium, color = Color.White)
-            subtitle?.let { Text(it, fontSize = 12.sp, color = SlateText) }
+            Text(label, fontSize = 15.sp, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onBackground)
+            subtitle?.let { Text(it, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant) }
         }
-        if (showArrow) Icon(Icons.Filled.ChevronRight, contentDescription = null, tint = SlateText, modifier = Modifier.size(20.dp))
+        if (showArrow) Icon(Icons.Filled.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
     }
 }
 
@@ -438,8 +431,8 @@ fun SettingsToggleItem(icon: ImageVector, label: String, subtitle: String? = nul
             Icon(icon, contentDescription = null, tint = PrimaryBlue, modifier = Modifier.size(20.dp))
         }
         Column(modifier = Modifier.weight(1f)) {
-            Text(label, fontSize = 15.sp, fontWeight = FontWeight.Medium, color = Color.White)
-            subtitle?.let { Text(it, fontSize = 12.sp, color = SlateText) }
+            Text(label, fontSize = 15.sp, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onBackground)
+            subtitle?.let { Text(it, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant) }
         }
         Switch(checked = checked, onCheckedChange = onCheckedChange, colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = PrimaryBlue))
     }

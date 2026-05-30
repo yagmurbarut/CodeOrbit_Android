@@ -19,7 +19,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.codeorbit.network.RetrofitClient
-import com.example.codeorbit.ui.splash.BackgroundDark
 import com.example.codeorbit.ui.splash.PrimaryBlue
 
 val SuccessGreen = Color(0xFF0BDA5E)
@@ -44,41 +43,32 @@ fun StatisticsScreen(
         if (effectiveUserId > 0) viewModel.loadStatistics(effectiveUserId)
     }
 
-    Box(
-        modifier = Modifier.fillMaxSize().background(BackgroundDark)
-    ) {
+    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         if (uiState.isLoading) {
             CircularProgressIndicator(modifier = Modifier.align(Alignment.Center), color = PrimaryBlue)
         } else {
             Column(modifier = Modifier.fillMaxSize()) {
-                // Header
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Box(
-                        modifier = Modifier.size(40.dp).clip(RoundedCornerShape(50)).background(SlateBackground),
+                        modifier = Modifier.size(40.dp).clip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.surface),
                         contentAlignment = Alignment.Center
                     ) {
                         IconButton(onClick = onNavigateBack) {
-                            Icon(Icons.Filled.ArrowBack, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
+                            Icon(Icons.Filled.ArrowBack, contentDescription = null, tint = MaterialTheme.colorScheme.onBackground, modifier = Modifier.size(20.dp))
                         }
                     }
-                    Text("Statistics", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    Text("Statistics", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
                     Box(modifier = Modifier.size(40.dp))
                 }
 
-                // Tabs
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
-                ) {
+                Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
                     tabs.forEachIndexed { index, tab ->
                         Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clickable { selectedTab = index }
-                                .padding(vertical = 12.dp),
+                            modifier = Modifier.weight(1f).clickable { selectedTab = index }.padding(vertical = 12.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -86,13 +76,11 @@ fun StatisticsScreen(
                                     tab,
                                     fontSize = 14.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = if (selectedTab == index) PrimaryBlue else SlateText
+                                    color = if (selectedTab == index) PrimaryBlue else MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(2.dp)
+                                    modifier = Modifier.fillMaxWidth().height(2.dp)
                                         .background(if (selectedTab == index) PrimaryBlue else Color.Transparent)
                                 )
                             }
@@ -100,9 +88,8 @@ fun StatisticsScreen(
                     }
                 }
 
-                HorizontalDivider(color = SlateBorder)
+                HorizontalDivider(color = MaterialTheme.colorScheme.outline)
 
-                // Tab içerikleri
                 when (selectedTab) {
                     0 -> GenelTab(stats = stats)
                     1 -> KategorilerTab(stats = stats)
@@ -113,35 +100,30 @@ fun StatisticsScreen(
     }
 }
 
-// ========== GENEL TAB ==========
 @Composable
 fun GenelTab(stats: com.example.codeorbit.network.StatisticsResponse?) {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp),
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // Total Quizzes & Accuracy
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Column(
-                modifier = Modifier.weight(1f).clip(RoundedCornerShape(16.dp)).background(SlateBackground).padding(20.dp),
+                modifier = Modifier.weight(1f).clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surface).padding(20.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                Text("Total Quizzes", fontSize = 13.sp, color = SlateText)
-                Text("${stats?.totalQuizzes ?: 0}", fontSize = 32.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                Text("Total Quizzes", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("${stats?.totalQuizzes ?: 0}", fontSize = 32.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     Icon(Icons.Filled.TrendingUp, contentDescription = null, tint = SuccessGreen, modifier = Modifier.size(16.dp))
                     Text("Tüm zamanlar", fontSize = 11.sp, color = SuccessGreen, fontWeight = FontWeight.SemiBold)
                 }
             }
             Column(
-                modifier = Modifier.weight(1f).clip(RoundedCornerShape(16.dp)).background(SlateBackground).padding(20.dp),
+                modifier = Modifier.weight(1f).clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surface).padding(20.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                Text("Accuracy", fontSize = 13.sp, color = SlateText)
-                Text("${"%.0f".format(stats?.overallSuccessRate ?: 0.0)}%", fontSize = 32.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                Text("Accuracy", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("${"%.0f".format(stats?.overallSuccessRate ?: 0.0)}%", fontSize = 32.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     Icon(Icons.Filled.TrendingUp, contentDescription = null, tint = SuccessGreen, modifier = Modifier.size(16.dp))
                     Text("Ortalama skor", fontSize = 11.sp, color = SuccessGreen, fontWeight = FontWeight.SemiBold)
@@ -149,53 +131,50 @@ fun GenelTab(stats: com.example.codeorbit.network.StatisticsResponse?) {
             }
         }
 
-        // Correct / Wrong
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Column(
-                modifier = Modifier.weight(1f).clip(RoundedCornerShape(16.dp)).background(SlateBackground).padding(20.dp),
+                modifier = Modifier.weight(1f).clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surface).padding(20.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                Text("Correct", fontSize = 13.sp, color = SlateText)
+                Text("Correct", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text("${stats?.totalCorrectAnswers ?: 0}", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = SuccessGreen)
-                Text("/ ${stats?.totalQuestionsSolved ?: 0} soru", fontSize = 11.sp, color = SlateText)
+                Text("/ ${stats?.totalQuestionsSolved ?: 0} soru", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             Column(
-                modifier = Modifier.weight(1f).clip(RoundedCornerShape(16.dp)).background(SlateBackground).padding(20.dp),
+                modifier = Modifier.weight(1f).clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surface).padding(20.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                Text("Wrong", fontSize = 13.sp, color = SlateText)
+                Text("Wrong", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text("${stats?.totalWrongAnswers ?: 0}", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color.Red.copy(alpha = 0.8f))
-                Text("/ ${stats?.totalQuestionsSolved ?: 0} soru", fontSize = 11.sp, color = SlateText)
+                Text("/ ${stats?.totalQuestionsSolved ?: 0} soru", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
 
-        // Streak
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Column(
-                modifier = Modifier.weight(1f).clip(RoundedCornerShape(16.dp)).background(SlateBackground).padding(20.dp),
+                modifier = Modifier.weight(1f).clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surface).padding(20.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                Text("Current Streak", fontSize = 13.sp, color = SlateText)
-                Text("${stats?.currentStreak ?: 0} 🔥", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                Text("gün", fontSize = 11.sp, color = SlateText)
+                Text("Current Streak", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("${stats?.currentStreak ?: 0} 🔥", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
+                Text("gün", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             Column(
-                modifier = Modifier.weight(1f).clip(RoundedCornerShape(16.dp)).background(SlateBackground).padding(20.dp),
+                modifier = Modifier.weight(1f).clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surface).padding(20.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                Text("Longest Streak", fontSize = 13.sp, color = SlateText)
-                Text("${stats?.longestStreak ?: 0} 🏆", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                Text("en uzun", fontSize = 11.sp, color = SlateText)
+                Text("Longest Streak", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("${stats?.longestStreak ?: 0} 🏆", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
+                Text("en uzun", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
 
-        // Difficulty breakdown
         if (!stats?.difficultyStats.isNullOrEmpty()) {
             Column(
-                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(SlateBackground).padding(20.dp),
+                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surface).padding(20.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Text("Zorluk Seviyesi", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                Text("Zorluk Seviyesi", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
                 stats?.difficultyStats?.forEach { diff ->
                     val value = (diff.successRate / 100).toFloat().coerceIn(0f, 1f)
                     val color = when (diff.difficultyLevel) {
@@ -206,17 +185,14 @@ fun GenelTab(stats: com.example.codeorbit.network.StatisticsResponse?) {
                     }
                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text(diff.difficultyLevel, fontSize = 13.sp, color = Color.White, fontWeight = FontWeight.SemiBold)
-                            Text(
-                                "${"%.0f".format(diff.successRate)}% (${diff.correctAnswers}/${diff.questionsSolved})",
-                                fontSize = 13.sp, color = color, fontWeight = FontWeight.Bold
-                            )
+                            Text(diff.difficultyLevel, fontSize = 13.sp, color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.SemiBold)
+                            Text("${"%.0f".format(diff.successRate)}% (${diff.correctAnswers}/${diff.questionsSolved})", fontSize = 13.sp, color = color, fontWeight = FontWeight.Bold)
                         }
                         LinearProgressIndicator(
                             progress = { value },
                             modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)),
                             color = color,
-                            trackColor = SlateBorder
+                            trackColor = MaterialTheme.colorScheme.outline
                         )
                     }
                 }
@@ -225,36 +201,31 @@ fun GenelTab(stats: com.example.codeorbit.network.StatisticsResponse?) {
     }
 }
 
-// ========== KATEGORİLER TAB ==========
 @Composable
 fun KategorilerTab(stats: com.example.codeorbit.network.StatisticsResponse?) {
     if (stats?.categoryStats.isNullOrEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("Henüz kategori verisi yok", fontSize = 14.sp, color = SlateText)
+            Text("Henüz kategori verisi yok", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         return
     }
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp),
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // Bar Chart
         Column(
-            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(SlateBackground).padding(20.dp),
+            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surface).padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
                 Column {
-                    Text("Kategori Başarısı", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                    Text("Kategoriye göre performans", fontSize = 11.sp, color = SlateText)
+                    Text("Kategori Başarısı", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
+                    Text("Kategoriye göre performans", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 Column(horizontalAlignment = Alignment.End) {
                     Text("${"%.0f".format(stats?.overallSuccessRate ?: 0.0)}%", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = PrimaryBlue)
-                    Text("GENEL", fontSize = 9.sp, color = SlateText, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                    Text("GENEL", fontSize = 9.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
                 }
             }
 
@@ -277,65 +248,56 @@ fun KategorilerTab(stats: com.example.codeorbit.network.StatisticsResponse?) {
                             Box(modifier = Modifier.fillMaxWidth().fillMaxHeight(value).clip(RoundedCornerShape(topStart = 6.dp, topEnd = 6.dp)).background(PrimaryBlue))
                         }
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text(cat.categoryName.take(4), fontSize = 11.sp, fontWeight = FontWeight.Bold, color = SlateText)
+                        Text(cat.categoryName.take(4), fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             }
         }
 
-        // Her kategori detayı
         stats?.categoryStats?.forEach { cat ->
             val value = (cat.successRate / 100).toFloat().coerceIn(0f, 1f)
             Column(
-                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(SlateBackground).padding(16.dp),
+                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surface).padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text(cat.categoryName, fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    Text(cat.categoryName, fontSize = 15.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
                     Text("${"%.0f".format(cat.successRate)}%", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = PrimaryBlue)
                 }
                 LinearProgressIndicator(
                     progress = { value },
                     modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)),
                     color = PrimaryBlue,
-                    trackColor = SlateBorder
+                    trackColor = MaterialTheme.colorScheme.outline
                 )
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                     Text("✅ ${cat.correctAnswers} doğru", fontSize = 12.sp, color = SuccessGreen)
                     Text("❌ ${cat.questionsSolved - cat.correctAnswers} yanlış", fontSize = 12.sp, color = Color.Red.copy(alpha = 0.8f))
-                    Text("📝 ${cat.questionsSolved} toplam", fontSize = 12.sp, color = SlateText)
+                    Text("📝 ${cat.questionsSolved} toplam", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         }
     }
 }
 
-// ========== HATALAR TAB ==========
 @Composable
 fun HatalarTab(stats: com.example.codeorbit.network.StatisticsResponse?) {
     if (stats?.mostWrongQuestions.isNullOrEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("🎉", fontSize = 48.sp)
-                Text("Henüz hata yok!", fontSize = 16.sp, color = Color.White, fontWeight = FontWeight.Bold)
-                Text("Harika gidiyorsun!", fontSize = 13.sp, color = SlateText)
+                Text("Henüz hata yok!", fontSize = 16.sp, color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Bold)
+                Text("Harika gidiyorsun!", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
         return
     }
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp),
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text(
-            "En çok yanlış yaptığın sorular",
-            fontSize = 14.sp,
-            color = SlateText
-        )
+        Text("En çok yanlış yaptığın sorular", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
         stats?.mostWrongQuestions?.forEach { question ->
             val iconColor = when {
@@ -344,25 +306,18 @@ fun HatalarTab(stats: com.example.codeorbit.network.StatisticsResponse?) {
                 else -> PrimaryBlue
             }
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(SlateBackground)
-                    .padding(16.dp),
+                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surface).padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Top) {
                     Box(
-                        modifier = Modifier
-                            .size(36.dp)
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(iconColor.copy(alpha = 0.15f)),
+                        modifier = Modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).background(iconColor.copy(alpha = 0.15f)),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(Icons.Filled.Warning, contentDescription = null, tint = iconColor, modifier = Modifier.size(18.dp))
                     }
                     Column(modifier = Modifier.weight(1f)) {
-                        Text(question.questionText, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = Color.White, lineHeight = 18.sp)
+                        Text(question.questionText, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onBackground, lineHeight = 18.sp)
                     }
                 }
                 Row(
@@ -371,22 +326,16 @@ fun HatalarTab(stats: com.example.codeorbit.network.StatisticsResponse?) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(PrimaryBlue.copy(alpha = 0.15f))
-                            .padding(horizontal = 8.dp, vertical = 3.dp)
+                        modifier = Modifier.clip(RoundedCornerShape(6.dp)).background(PrimaryBlue.copy(alpha = 0.15f)).padding(horizontal = 8.dp, vertical = 3.dp)
                     ) {
                         Text(question.categoryName, fontSize = 11.sp, color = PrimaryBlue, fontWeight = FontWeight.Bold)
                     }
                     Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(iconColor.copy(alpha = 0.15f))
-                            .padding(horizontal = 8.dp, vertical = 3.dp)
+                        modifier = Modifier.clip(RoundedCornerShape(6.dp)).background(iconColor.copy(alpha = 0.15f)).padding(horizontal = 8.dp, vertical = 3.dp)
                     ) {
                         Text("Hata: ${"%.0f".format(question.wrongRate)}%", fontSize = 11.sp, color = iconColor, fontWeight = FontWeight.Bold)
                     }
-                    Text("${question.timesWrong}/${question.timesAnswered} kez", fontSize = 11.sp, color = SlateText)
+                    Text("${question.timesWrong}/${question.timesAnswered} kez", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         }

@@ -48,7 +48,7 @@ fun AchievementsScreen(
     val lockedBadges = uiState.badges.filter { !it.isEarned }
 
     Box(
-        modifier = Modifier.fillMaxSize().background(BackgroundDark)
+        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             // Header
@@ -58,7 +58,7 @@ fun AchievementsScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Box(
-                    modifier = Modifier.size(40.dp).clip(CircleShape).background(SlateBackground).clickable { onNavigateBack() },
+                    modifier = Modifier.size(40.dp).clip(CircleShape).background(MaterialTheme.colorScheme.surface).clickable { onNavigateBack() },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(Icons.Filled.ArrowBack, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
@@ -114,14 +114,14 @@ fun AchievementsScreen(
                     // Stats kartları
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         Column(
-                            modifier = Modifier.weight(1f).clip(RoundedCornerShape(16.dp)).background(SlateBackground).padding(16.dp),
+                            modifier = Modifier.weight(1f).clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surface).padding(16.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text("${earnedBadges.size}", fontSize = 32.sp, fontWeight = FontWeight.Bold, color = PrimaryBlue)
                             Text("KAZANILAN", fontSize = 10.sp, color = SlateText, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
                         }
                         Column(
-                            modifier = Modifier.weight(1f).clip(RoundedCornerShape(16.dp)).background(SlateBackground).padding(16.dp),
+                            modifier = Modifier.weight(1f).clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surface).padding(16.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text("${lockedBadges.size}", fontSize = 32.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFBBF24))
@@ -133,7 +133,7 @@ fun AchievementsScreen(
                         // Kazanılan rozetler
                         if (earnedBadges.isEmpty()) {
                             Box(
-                                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(SlateBackground).padding(32.dp),
+                                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surface).padding(32.dp),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -239,7 +239,7 @@ fun AchievementsScreen(
                                             .fillMaxWidth()
                                             .alpha(0.7f)
                                             .clip(RoundedCornerShape(16.dp))
-                                            .background(SlateBackground)
+                                            .background(MaterialTheme.colorScheme.surface)
                                             .padding(16.dp),
                                         verticalArrangement = Arrangement.spacedBy(10.dp)
                                     ) {
@@ -251,7 +251,7 @@ fun AchievementsScreen(
                                                 modifier = Modifier
                                                     .size(56.dp)
                                                     .clip(CircleShape)
-                                                    .background(SlateBackground)
+                                                    .background(MaterialTheme.colorScheme.surface)
                                                     .border(2.dp, SlateBorder, CircleShape),
                                                 contentAlignment = Alignment.Center
                                             ) {

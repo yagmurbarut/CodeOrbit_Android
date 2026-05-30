@@ -45,7 +45,7 @@ fun FavoritesScreen(
     // Kategoriye göre grupla
     val groupedFavorites = uiState.favorites.groupBy { it.categoryName }
 
-    Box(modifier = Modifier.fillMaxSize().background(BackgroundDark)) {
+    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         Column(modifier = Modifier.fillMaxSize()) {
             // Header
             Row(
@@ -59,13 +59,13 @@ fun FavoritesScreen(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
-                        .background(SlateBackground)
+                        .background(MaterialTheme.colorScheme.surface)
                         .clickable { onNavigateBack() },
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Filled.ArrowBack, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
+                    Icon(Icons.Filled.ArrowBack, contentDescription = null, tint = MaterialTheme.colorScheme.onBackground, modifier = Modifier.size(20.dp))
                 }
-                Text("Favorilerim ⭐", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                Text("Favorilerim ⭐", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(8.dp))
@@ -92,7 +92,7 @@ fun FavoritesScreen(
                             "Henüz favori soru yok",
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color.White
+                            color = MaterialTheme.colorScheme.onBackground
                         )
                         Text(
                             "Quiz çözerken ⭐ butonuna basarak\nsoruları favorilere ekleyebilirsin.",
@@ -143,7 +143,7 @@ fun FavoriteCategoryGroup(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(SlateBackground)
+            .background(MaterialTheme.colorScheme.surface)
     ) {
         // Kategori başlığı
         Row(
@@ -177,7 +177,7 @@ fun FavoriteCategoryGroup(
                         categoryName,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.onBackground
                     )
                     Text(
                         "${questions.size} soru",
@@ -268,14 +268,14 @@ fun FavoriteQuestionItem(
                 question.questionText,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onBackground,
                 lineHeight = 20.sp
             )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(4.dp))
-                        .background(SlateBackground)
+                        .background(MaterialTheme.colorScheme.surface)
                         .padding(horizontal = 6.dp, vertical = 2.dp)
                 ) {
                     Text(
@@ -310,7 +310,7 @@ fun FavoriteQuestionItem(
                     modifier = Modifier
                         .size(32.dp)
                         .clip(RoundedCornerShape(8.dp))
-                        .background(SlateBackground)
+                        .background(MaterialTheme.colorScheme.surface)
                         .clickable { showConfirm = false },
                     contentAlignment = Alignment.Center
                 ) {

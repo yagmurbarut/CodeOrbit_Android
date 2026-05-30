@@ -59,7 +59,7 @@ fun AccountSettingsScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(BackgroundDark)
+            .background(MaterialTheme.colorScheme.background)
     ) {
         Column(
             modifier = Modifier
@@ -79,7 +79,7 @@ fun AccountSettingsScreen(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
-                        .background(SlateBackground)
+                        .background(MaterialTheme.colorScheme.surface)
                         .clickable { onNavigateBack() },
                     contentAlignment = Alignment.Center
                 ) {
@@ -100,7 +100,7 @@ fun AccountSettingsScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(20.dp))
-                        .background(SlateBackground)
+                        .background(MaterialTheme.colorScheme.surface)
                         .padding(20.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
@@ -210,7 +210,7 @@ fun AccountSettingsScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(20.dp))
-                        .background(SlateBackground)
+                        .background(MaterialTheme.colorScheme.surface)
                         .padding(20.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {

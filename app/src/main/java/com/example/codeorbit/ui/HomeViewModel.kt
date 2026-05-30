@@ -78,7 +78,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                 val recent = history.take(2).map {
                     QuizHistoryItem(
                         title = it.categoryName,
-                        score = it.score,
+                        score = it.successRate.toInt(),
                         completedAt = formatDate(it.completedAt)
                     )
                 }
@@ -93,7 +93,9 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     }
     private fun formatDate(dateStr: String): String {
         return try {
-            val inputFormat = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.getDefault())
+            val inputFormat = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.getDefault()).apply {
+                timeZone = java.util.TimeZone.getTimeZone("UTC")
+            }
             val date = inputFormat.parse(dateStr) ?: return dateStr
             val now = java.util.Date()
             val diffMs = now.time - date.time

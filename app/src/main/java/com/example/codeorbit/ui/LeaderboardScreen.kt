@@ -14,13 +14,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.codeorbit.network.RetrofitClient
-import com.example.codeorbit.ui.splash.BackgroundDark
 import com.example.codeorbit.ui.splash.PrimaryBlue
 
 @Composable
@@ -47,7 +47,7 @@ fun LeaderboardScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(BackgroundDark)
+            .background(MaterialTheme.colorScheme.background)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             // Header
@@ -62,13 +62,13 @@ fun LeaderboardScreen(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
-                        .background(SlateBackground)
+                        .background(MaterialTheme.colorScheme.surface)
                         .clickable { onNavigateBack() },
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Filled.ArrowBack, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
+                    Icon(Icons.Filled.ArrowBack, contentDescription = null, tint = MaterialTheme.colorScheme.onBackground, modifier = Modifier.size(20.dp))
                 }
-                Text("Leaderboard", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                Text("Leaderboard", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
                 Box(modifier = Modifier.size(40.dp), contentAlignment = Alignment.Center) {
                     Icon(Icons.Filled.Share, contentDescription = null, tint = PrimaryBlue, modifier = Modifier.size(20.dp))
                 }
@@ -93,7 +93,7 @@ fun LeaderboardScreen(
                                 tab,
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = if (selectedTab == index) PrimaryBlue else SlateText
+                                color = if (selectedTab == index) PrimaryBlue else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Box(
@@ -107,7 +107,7 @@ fun LeaderboardScreen(
                 }
             }
 
-            HorizontalDivider(color = SlateBorder)
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline)
 
             if (uiState.isLoading) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -115,7 +115,7 @@ fun LeaderboardScreen(
                 }
             } else if (activeList.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Henüz sıralama yok", fontSize = 14.sp, color = SlateText)
+                    Text("Henüz sıralama yok", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             } else {
                 Column(
@@ -125,13 +125,12 @@ fun LeaderboardScreen(
                         .padding(horizontal = 16.dp, vertical = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // Podium — sadece 3+ kullanıcı varsa göster
                     if (activeList.size >= 3) {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .background(
-                                    androidx.compose.ui.graphics.Brush.verticalGradient(
+                                    Brush.verticalGradient(
                                         colors = listOf(PrimaryBlue.copy(alpha = 0.1f), Color.Transparent)
                                     )
                                 )
@@ -176,7 +175,6 @@ fun LeaderboardScreen(
                         Spacer(modifier = Modifier.height(8.dp))
                     }
 
-                    // Tüm liste
                     activeList.forEach { entry ->
                         val isMe = entry.userId == effectiveUserId
                         Row(
@@ -185,13 +183,12 @@ fun LeaderboardScreen(
                                 .clip(RoundedCornerShape(12.dp))
                                 .background(
                                     if (isMe) PrimaryBlue.copy(alpha = 0.15f)
-                                    else SlateBackground
+                                    else MaterialTheme.colorScheme.surface
                                 )
                                 .padding(12.dp),
                             horizontalArrangement = Arrangement.spacedBy(12.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            // Sıra numarası
                             Text(
                                 "${entry.rank}",
                                 fontSize = 14.sp,
@@ -200,11 +197,10 @@ fun LeaderboardScreen(
                                     1 -> Color(0xFFEAB308)
                                     2 -> Color(0xFF94A3B8)
                                     3 -> Color(0xFF92400E)
-                                    else -> if (isMe) PrimaryBlue else SlateText
+                                    else -> if (isMe) PrimaryBlue else MaterialTheme.colorScheme.onSurfaceVariant
                                 },
                                 modifier = Modifier.width(28.dp)
                             )
-                            // Avatar
                             Box(
                                 modifier = Modifier
                                     .size(44.dp)
@@ -222,40 +218,25 @@ fun LeaderboardScreen(
                                     color = Color.White
                                 )
                             }
-                            // İsim ve skor
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     if (isMe) "${entry.username} (Sen)" else entry.username,
                                     fontSize = 14.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = Color.White
+                                    color = MaterialTheme.colorScheme.onBackground
                                 )
                                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    Text(
-                                        "${entry.score} Quiz",
-                                        fontSize = 12.sp,
-                                        color = SlateText
-                                    )
-                                    Text(
-                                        "${"%.0f".format(entry.successRate)}% başarı",
-                                        fontSize = 12.sp,
-                                        color = SuccessGreen
-                                    )
+                                    Text("${entry.score} Quiz", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Text("${"%.0f".format(entry.successRate)}% başarı", fontSize = 12.sp, color = SuccessGreen)
                                 }
                             }
-                            // Streak
                             if (entry.currentStreak > 0) {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.spacedBy(2.dp)
                                 ) {
                                     Text("🔥", fontSize = 14.sp)
-                                    Text(
-                                        "${entry.currentStreak}",
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color(0xFFF97316)
-                                    )
+                                    Text("${entry.currentStreak}", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFFF97316))
                                 }
                             }
                         }
@@ -325,7 +306,7 @@ fun PodiumItem(
             name.split(" ").first(),
             fontSize = if (rank == 1) 14.sp else 12.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.White
+            color = MaterialTheme.colorScheme.onBackground
         )
         Text(xp, fontSize = 11.sp, color = xpColor)
         Spacer(modifier = Modifier.height(8.dp))
@@ -335,7 +316,7 @@ fun PodiumItem(
                 .height(podiumHeight)
                 .clip(RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp))
                 .background(
-                    if (rank == 1) PrimaryBlue.copy(alpha = 0.3f) else SlateBackground
+                    if (rank == 1) PrimaryBlue.copy(alpha = 0.3f) else MaterialTheme.colorScheme.surface
                 )
         )
     }

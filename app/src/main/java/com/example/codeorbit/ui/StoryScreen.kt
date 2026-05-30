@@ -113,7 +113,7 @@ fun StoryCircle(
                 modifier = Modifier
                     .size(62.dp)
                     .clip(CircleShape)
-                    .background(BackgroundDark),
+                    .background(MaterialTheme.colorScheme.background),
                 contentAlignment = Alignment.Center
             ) {
                 Box(
@@ -135,7 +135,7 @@ fun StoryCircle(
         Text(
             story.type.name.take(8).lowercase().replaceFirstChar { it.uppercase() },
             fontSize = 10.sp,
-            color = if (!story.isViewed) Color.White else SlateText,
+            color = if (!story.isViewed) MaterialTheme.colorScheme.onBackground else SlateText,
             fontWeight = FontWeight.Medium,
             maxLines = 1
         )

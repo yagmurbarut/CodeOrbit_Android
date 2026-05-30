@@ -41,7 +41,7 @@ fun NotificationScreen(
         if (effectiveUserId > 0) viewModel.loadNotifications(effectiveUserId)
     }
 
-    Box(modifier = Modifier.fillMaxSize().background(BackgroundDark)) {
+    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         Column(modifier = Modifier.fillMaxSize()) {
             // Header
             Row(
@@ -50,7 +50,7 @@ fun NotificationScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Box(
-                    modifier = Modifier.size(40.dp).clip(CircleShape).background(SlateBackground).clickable { onNavigateBack() },
+                    modifier = Modifier.size(40.dp).clip(CircleShape).background(MaterialTheme.colorScheme.surface).clickable { onNavigateBack() },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(Icons.Filled.ArrowBack, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
