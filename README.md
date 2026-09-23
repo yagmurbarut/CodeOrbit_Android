@@ -1,0 +1,1 @@
+CodeOrbit – A gamified programming learning app for Android. Quizzes, streaks, badges, leaderboards and friends. Built with Kotlin, Jetpack Compose, Clean Architecture (MVVM), Hilt, Retrofit and Room.
